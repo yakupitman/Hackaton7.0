@@ -75,15 +75,6 @@ public class Store : Building
         }
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        InteractableObject item = other.GetComponent<InteractableObject>();
-        if (item == null) return;
-        
-        PlayerStateManager.Instance.AddMoney(item.Price);
-        Destroy(other.gameObject);
-    }
-
     public void BuyBait(int baitType)
     {
         int price = baitType switch
