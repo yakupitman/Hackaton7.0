@@ -13,7 +13,7 @@
 | `Shopping` одразу перезаписується на `Interacting`, тож HUD ховається в Store. | `PlayerMovement.TryBeginInteraction` | [0006](0006-player-states-cleanup.uk.md) |
 | У стан `Catching` ніхто не переходить (мертвий код). | `PlayerStateManager` | [0006](0006-player-states-cleanup.uk.md) |
 | Гравець може ходити в стані `Dead` (під час затемнення смерті). Рух блокує лише `Interacting`. | `PlayerMovement.Move` | [0006](0006-player-states-cleanup.uk.md) |
-| Є два способи Sell: тригер Store і Lift. Погоджено: лише Lift. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.uk.md) |
+| У коді є два способи Sell: тригер Store і Lift. Погоджено: лише Lift. PR #16 з'ясував, що в Store у сцені немає тригер-колайдера, тож продаж через Store насправді ніколи не працював. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.uk.md) |
 | Досягнення Exit нічого не робить: `SuccessfulEscape()` не викликає жоден скрипт, а якби й викликав, він лише пише «WIN!» у лог. | `EscapeSequence`, `EscapeSuccessTrigger` у сцені | [0008](0008-escape-win-screen.uk.md) |
 | Перезавантаження сцени лишило б старі менеджери з `DontDestroyOnLoad`, що посилаються на знищені об'єкти. | `PlayerStateManager`, `InputManager`, `HoldManager`, `UIManager` | [0008](0008-escape-win-screen.uk.md) |
 | Кнопки Bait викликають напряму `Pond1.SelectBait`, тож нові Pond не можуть користуватися UI. | Події UI у сцені | [0009](0009-shared-pond-ui.uk.md) |
@@ -21,8 +21,7 @@
 
 ## Відкриті баги без задачі
 
-- **Невдала покупка Chisel Kit закриває Store.** `Store.BuyChiselKit` викликає `EndInteraction()`, навіть коли `SpendMoney` не вдався. Камера й UI закриваються, але стан лишається не `Regular`, доки не натиснути E. Не вирішено: чи має Store лишатися відкритим при невдалій покупці?
-- **Prey, кинута в зону Store** (після 0007): Prey, що потрапила в колишній тригер Store, просто там лежить. Не вирішено, чи її треба виштовхувати.
+- **Невдала покупка Chisel Kit закриває Store.** `Store.BuyChiselKit` викликає `EndInteraction()`, навіть коли `SpendMoney` не вдався. Починаючи з `a2ea2a5`, `Store.EndInteraction()` співрозробника ставить `Regular`, тож гравець більше не застрягає. Не вирішено: чи має Store лишатися відкритим при невдалій покупці?
 
 - **Подвійний клік витрачає два Bait.** Два кліки по кнопці Bait протягом 0.25 с затухання панелі можуть двічі викликати `SelectBait`. Знайдено в 0009 (PR #15).
 

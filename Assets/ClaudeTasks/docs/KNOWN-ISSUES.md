@@ -13,7 +13,7 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 | `Shopping` is overwritten by `Interacting` straight away, so the HUD hides in the Store. | `PlayerMovement.TryBeginInteraction` | [0006](0006-player-states-cleanup.md) |
 | `Catching` state is never entered (dead code). | `PlayerStateManager` | [0006](0006-player-states-cleanup.md) |
 | The Player can walk in `Dead` (during the death fade). Only `Interacting` blocks movement. | `PlayerMovement.Move` | [0006](0006-player-states-cleanup.md) |
-| There are two ways to Sell: the Store trigger and the Lift. Agreed: Lift only. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.md) |
+| There are two ways to Sell in code: the Store trigger and the Lift. Agreed: Lift only. PR #16 found the Store has no trigger collider in the scene, so Store selling never actually worked. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.md) |
 | Reaching the Exit does nothing: no script calls `SuccessfulEscape()`, and even if one did, it only logs "WIN!". | `EscapeSequence`, `EscapeSuccessTrigger` in scene | [0008](0008-escape-win-screen.md) |
 | Reloading the scene would keep stale `DontDestroyOnLoad` managers that point at destroyed objects. | `PlayerStateManager`, `InputManager`, `HoldManager`, `UIManager` | [0008](0008-escape-win-screen.md) |
 | The Bait buttons call `Pond1.SelectBait` directly, so new Ponds can't use the UI. | Scene UI events | [0009](0009-shared-pond-ui.md) |
@@ -21,8 +21,7 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 
 ## Open bugs without a task yet
 
-- **A failed Chisel Kit purchase closes the Store.** `Store.BuyChiselKit` calls `EndInteraction()` even when `SpendMoney` fails. The camera and UI close, but the state stays non-`Regular` until E is pressed. Undecided: should the Store stay open when the purchase fails?
-- **Dropped Prey in the Store area** (after 0007): Prey that lands in the old Store trigger just stays there. Undecided whether it should be pushed out.
+- **A failed Chisel Kit purchase closes the Store.** `Store.BuyChiselKit` calls `EndInteraction()` even when `SpendMoney` fails. Since `a2ea2a5` the co-developer's `Store.EndInteraction()` sets `Regular`, so the Player no longer gets stuck. Undecided: should the Store stay open when a purchase fails?
 
 - **Double-click spends two Bait.** Clicking a Bait button twice during the 0.25 s panel fade can call `SelectBait` twice. Found in 0009 (PR #15).
 
