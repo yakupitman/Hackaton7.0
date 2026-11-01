@@ -6,7 +6,6 @@ using TMPro;
 public enum PlayerState
 {
     Regular,
-    Catching,
     Interacting,
     Shopping,
     Dead
@@ -63,19 +62,6 @@ public class PlayerStateManager : MonoBehaviour
         {
             fadeScreen.alpha = 0f;
             fadeScreen.blocksRaycasts = false;
-        }
-    }
-
-    private void Update()
-    {
-        CheckCatchingExit();
-    }
-
-    private void CheckCatchingExit()
-    {
-        if (CurrentState == PlayerState.Catching && InputManager.Instance.Interact)
-        {
-            SetState(PlayerState.Regular);
         }
     }
 
