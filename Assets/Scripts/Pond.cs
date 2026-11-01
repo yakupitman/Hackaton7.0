@@ -19,6 +19,8 @@ public enum FlashlightAxis
 
 public class Pond : Building
 {
+    public static Pond ActivePond { get; private set; }
+
     [SerializeField] private CinemachineCamera pondCamera;
     [SerializeField] private CinemachineCamera pondCamera2;
     [SerializeField] private Animator pondVisualAnimator;
@@ -141,6 +143,7 @@ public class Pond : Building
     public override void BeginInteraction()
     {
         base.BeginInteraction();
+        ActivePond = this;
         pondCamera.enabled = true;
         if (pondCamera2 != null) pondCamera2.enabled = false;
         ShowUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
@@ -149,6 +152,7 @@ public class Pond : Building
     public override void EndInteraction()
     {
         base.EndInteraction();
+        if (ActivePond == this) ActivePond = null;
         StopMinigame();
         pondCamera.enabled = false;
         if (pondCamera2 != null) pondCamera2.enabled = false;
@@ -162,6 +166,12 @@ public class Pond : Building
         if (ambientAudioSource != null) ambientAudioSource.Stop();
         HideUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
         isWaitingForBite = false;
+    }
+
+    private void OnDestroy()
+    {
+        // Don't leave a static pointing at a destroyed Pond
+        if (ActivePond == this) ActivePond = null;
     }
 
     public void SelectBait(int baitType)
