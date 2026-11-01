@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Unity.Cinemachine;
 using DG.Tweening;
 
@@ -20,6 +21,14 @@ public enum FlashlightAxis
 public class Pond : Building
 {
     public static Pond ActivePond { get; private set; }
+
+    public UnityEvent OnUnlocked;
+    public bool IsUnlocked => isUnlocked;
+    public int UnlockPrice => unlockPrice;
+
+    [Header("Unlock")]
+    [SerializeField] private bool isUnlocked;
+    [SerializeField] private int unlockPrice = 30;
 
     [SerializeField] private CinemachineCamera pondCamera;
     [SerializeField] private CinemachineCamera pondCamera2;
@@ -89,6 +98,7 @@ public class Pond : Building
     private Quaternion initialFlashlightRotation;
     private static readonly int OpenedHash = Animator.StringToHash("opened");
     private Tween particleWaitTween;
+    private bool isInUnlockPopup;
 
     private void Awake()
     {
@@ -143,6 +153,14 @@ public class Pond : Building
     public override void BeginInteraction()
     {
         base.BeginInteraction();
+        // A Locked Pond only offers the unlock popup: no cameras, no Bait UI, no ActivePond
+        if (!isUnlocked)
+        {
+            isInUnlockPopup = true;
+            if (PondUnlockPopup.Instance != null) PondUnlockPopup.Instance.Show(this, unlockPrice);
+            else Debug.LogWarning("Pond: no PondUnlockPopup in the scene, press E to leave", this);
+            return;
+        }
         ActivePond = this;
         pondCamera.enabled = true;
         if (pondCamera2 != null) pondCamera2.enabled = false;
@@ -152,6 +170,13 @@ public class Pond : Building
     public override void EndInteraction()
     {
         base.EndInteraction();
+        // Checked by flag, not isUnlocked: Buy unlocks before the popup ends this interaction
+        if (isInUnlockPopup)
+        {
+            isInUnlockPopup = false;
+            if (PondUnlockPopup.Instance != null && PondUnlockPopup.Instance.CurrentPond == this) PondUnlockPopup.Instance.Hide();
+            return;
+        }
         if (ActivePond == this) ActivePond = null;
         StopMinigame();
         pondCamera.enabled = false;
@@ -166,6 +191,22 @@ public class Pond : Building
         if (ambientAudioSource != null) ambientAudioSource.Stop();
         HideUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
         isWaitingForBite = false;
+    }
+
+    public void Unlock()
+    {
+        if (isUnlocked) return;
+        isUnlocked = true;
+        OnUnlocked?.Invoke();
+    }
+
+    public bool TryBuyUnlock()
+    {
+        if (isUnlocked) return true;
+        // SpendMoney rejects 0, so a free Pond unlocks without spending
+        if (unlockPrice > 0 && !PlayerStateManager.Instance.SpendMoney(unlockPrice)) return false;
+        Unlock();
+        return true;
     }
 
     private void OnDestroy()
