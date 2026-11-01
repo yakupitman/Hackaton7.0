@@ -8,7 +8,8 @@ public enum PlayerState
     Regular,
     Interacting,
     Shopping,
-    Dead
+    Dead,
+    Menu
 }
 
 public class PlayerStateManager : MonoBehaviour
@@ -23,6 +24,7 @@ public class PlayerStateManager : MonoBehaviour
     public PlayerState CurrentState { get; private set; }
     public int Money { get; private set; }
 
+    [SerializeField] private int startingMoney = 500;
     [SerializeField] private int[] baitCounts = new int[3];
     
     [Header("UI Elements")]
@@ -54,8 +56,12 @@ public class PlayerStateManager : MonoBehaviour
 
     private void Start()
     {
-        CurrentState = PlayerState.Regular;
-        Money = 500;
+        // SetState (not a direct assignment) so the HUD hides and listeners like PlayerVisibility hear about Menu
+        SetState(PlayerState.Menu);
+        // Snap the HUD hidden instead of letting it fade out over the menu
+        if (moneyUIGroup != null) moneyUIGroup.DOKill(complete: true);
+        if (globalBaitsUIGroup != null) globalBaitsUIGroup.DOKill(complete: true);
+        Money = startingMoney;
         OnMoneyChanged?.Invoke(Money);
         UpdateTeleportText();
         
