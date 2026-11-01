@@ -69,11 +69,11 @@ public class MainMenu : MonoBehaviour
         }
         SetMenuVisible(false);
         if (menuCamera != null) menuCamera.enabled = false;
-        PlayerStateManager.Instance.SetState(PlayerState.Regular);
         // Stay black until the CinemachineBrain finishes blending from the MenuCamera, so the camera move is never seen
         yield return null;
         CinemachineBrain brain = Camera.main != null ? Camera.main.GetComponent<CinemachineBrain>() : null;
         while (brain != null && brain.IsBlending) yield return null;
+        PlayerStateManager.Instance.SetState(PlayerState.Regular);
         if (fade != null)
         {
             yield return fade.DOFade(0f, fadeDuration).SetLink(gameObject).WaitForCompletion();
