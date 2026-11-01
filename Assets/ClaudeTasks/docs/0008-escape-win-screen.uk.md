@@ -2,6 +2,7 @@
 
 Джерело: відома проблема (без брифу). Див. `KNOWN-ISSUES.uk.md`.
 Гілка: `task/0008-escape-win-screen` · Англійська версія (основна): `0008-escape-win-screen.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/12
 
 ## Мета
 

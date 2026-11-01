@@ -2,6 +2,7 @@
 
 Source: known issue (no brief). See `KNOWN-ISSUES.md`.
 Branch: `task/0005-death-respawn` · Ukrainian copy: `0005-death-respawn.uk.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/9
 
 ## Goal
 

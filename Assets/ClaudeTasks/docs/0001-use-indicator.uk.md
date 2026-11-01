@@ -2,6 +2,7 @@
 
 Оригінальне завдання: `Assets/ClaudeTasks/BuildingInteractionIdentificator.txt`
 Гілка: `task/0001-use-indicator` · Англійська версія (основна): `0001-use-indicator.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/1
 
 ## Мета
 

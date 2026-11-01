@@ -2,6 +2,7 @@
 
 Оригінальне завдання: `Assets/ClaudeTasks/PlayerVisibility.txt`
 Гілка: `task/0002-player-visibility` · Англійська версія (основна): `0002-player-visibility.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/2
 
 ## Мета
 

@@ -2,6 +2,7 @@
 
 Джерело: відома проблема (без брифу). Див. `KNOWN-ISSUES.uk.md`.
 Гілка: `task/0007-sell-via-lift-only` · Англійська версія (основна): `0007-sell-via-lift-only.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/11
 
 ## Мета
 

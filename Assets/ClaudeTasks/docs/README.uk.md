@@ -13,6 +13,7 @@
 | 0007 | [Продаж лише через Lift](0007-sell-via-lift-only.uk.md) | `task/0007-sell-via-lift-only` | `Store.cs` |
 | 0008 | [Екран перемоги в Escape](0008-escape-win-screen.uk.md) | `task/0008-escape-win-screen` | `EscapeSequence.cs`, новий `EscapeExitTrigger.cs`, новий `WinScreen.cs` |
 | 0009 | [Спільний UI для Pond](0009-shared-pond-ui.uk.md) | `task/0009-shared-pond-ui` | `Pond.cs`, новий `PondBaitRouter.cs` |
+| 0010 | [Teleport переносить і кулю](0010-teleport-with-ball.uk.md) | `task/0010-teleport-with-ball` | `PlayerStateManager.cs` (`UseTeleport()` + метод респавну) — **після злиття #14** |
 
 Задачі змінюють різні файли й жодна не редагує `SampleScene.unity`, тож їх можна виконувати одночасно — окрім 0006, яка чекає на злиття PR #5 (0001) і 0005.
 

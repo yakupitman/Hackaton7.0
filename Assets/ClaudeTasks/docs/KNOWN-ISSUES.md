@@ -13,15 +13,17 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 | `Shopping` is overwritten by `Interacting` straight away, so the HUD hides in the Store. | `PlayerMovement.TryBeginInteraction` | [0006](0006-player-states-cleanup.md) |
 | `Catching` state is never entered (dead code). | `PlayerStateManager` | [0006](0006-player-states-cleanup.md) |
 | The Player can walk in `Dead` (during the death fade). Only `Interacting` blocks movement. | `PlayerMovement.Move` | [0006](0006-player-states-cleanup.md) |
-| There are two ways to Sell: the Store trigger and the Lift. Agreed: Lift only. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.md) |
+| There are two ways to Sell in code: the Store trigger and the Lift. Agreed: Lift only. PR #16 found the Store has no trigger collider in the scene, so Store selling never actually worked. | `Store.OnTriggerEnter` | [0007](0007-sell-via-lift-only.md) |
 | Reaching the Exit does nothing: no script calls `SuccessfulEscape()`, and even if one did, it only logs "WIN!". | `EscapeSequence`, `EscapeSuccessTrigger` in scene | [0008](0008-escape-win-screen.md) |
 | Reloading the scene would keep stale `DontDestroyOnLoad` managers that point at destroyed objects. | `PlayerStateManager`, `InputManager`, `HoldManager`, `UIManager` | [0008](0008-escape-win-screen.md) |
 | The Bait buttons call `Pond1.SelectBait` directly, so new Ponds can't use the UI. | Scene UI events | [0009](0009-shared-pond-ui.md) |
+| The Teleport item moves only the Player's transform: it skips the Rigidbody, toggles a `CharacterController` that doesn't exist, and leaves the Ball behind. | `PlayerStateManager.UseTeleport` | [0010](0010-teleport-with-ball.md) |
 
 ## Open bugs without a task yet
 
-- **A failed Chisel Kit purchase closes the Store.** `Store.BuyChiselKit` calls `EndInteraction()` even when `SpendMoney` fails. The camera and UI close, but the state stays non-`Regular` until E is pressed. Undecided: should the Store stay open when the purchase fails?
-- **Dropped Prey in the Store area** (after 0007): Prey that lands in the old Store trigger just stays there. Undecided whether it should be pushed out.
+- **A failed Chisel Kit purchase closes the Store.** `Store.BuyChiselKit` calls `EndInteraction()` even when `SpendMoney` fails. Since `a2ea2a5` the co-developer's `Store.EndInteraction()` sets `Regular`, so the Player no longer gets stuck. Undecided: should the Store stay open when a purchase fails?
+
+- **Double-click spends two Bait.** Clicking a Bait button twice during the 0.25 s panel fade can call `SelectBait` twice. Found in 0009 (PR #15).
 
 ## Trade-offs left by finished tasks
 
@@ -33,6 +35,9 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 | 0003 (PR #7) | Only the bottom Prey of a stack is carried; the ones on top are pushed and may wobble. | Accept it, or carry everything that touches a rider. |
 | 0003 (PR #7) | The platform peaks at about 10 m/s and Prey could bounce off at the top. | Add a kinematic Rigidbody on the platform, moved with `MovePosition`. |
 | 0003 (PR #7) | `[DefaultExecutionOrder(1000)]` assumes DOTween's fixed tick runs at the default order. A wrong order costs at most about 4 mm of lag per step. | No action unless Prey visibly lag. |
+| 0005 (PR #14) | The Ball respawns with its centre at y = 0 and may sit half in the floor. | Add a small height offset in the respawn helper. |
+| 0005 (PR #14) | The floor and walls at the world centre `(0, 0, 0)` weren't checked (the colliders under `HotelWallsParent`). | Test the respawn spot; move it if needed. |
+| 0009 (PR #15) | `Pond.ActivePond` isn't cleared when a Catch ends in success or Death, only on E or destroy. Harmless: the next Pond entered overwrites it. | None. |
 | 0004 | The Prey face materials now draw over other transparent effects (e.g. Incense particles). | Lower the faces' queue offset, or raise the particles' queue. |
 | 0004 | Builds can't find `Custom/CorridorDarkness` through `Shader.Find` unless it's in *Always Included Shaders* or assigned in the Inspector. | Follow the 0004 Inspector checklist. |
 

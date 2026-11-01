@@ -2,6 +2,7 @@
 
 Source: known issue (no brief). See `KNOWN-ISSUES.md`.
 Branch: `task/0006-player-states-cleanup` · Ukrainian copy: `0006-player-states-cleanup.uk.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/10
 
 ## Goal
 

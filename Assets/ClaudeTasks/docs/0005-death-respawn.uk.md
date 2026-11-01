@@ -2,6 +2,7 @@
 
 Джерело: відома проблема (без брифу). Див. `KNOWN-ISSUES.uk.md`.
 Гілка: `task/0005-death-respawn` · Англійська версія (основна): `0005-death-respawn.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/9
 
 ## Мета
 

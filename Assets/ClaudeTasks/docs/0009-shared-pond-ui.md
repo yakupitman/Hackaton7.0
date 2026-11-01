@@ -2,6 +2,7 @@
 
 Source: known issue (no brief). See `KNOWN-ISSUES.md`.
 Branch: `task/0009-shared-pond-ui` · Ukrainian copy: `0009-shared-pond-ui.uk.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/13
 
 ## Goal
 
