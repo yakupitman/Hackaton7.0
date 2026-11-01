@@ -1,8 +1,11 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Unity.Cinemachine;
 
 public class EscapeSequence : MonoBehaviour
 {
+    public UnityEvent OnEscaped;
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private Transform ghost;
@@ -114,12 +117,12 @@ public class EscapeSequence : MonoBehaviour
         
         isChasing = false;
         ResetState();
-        Debug.Log("WIN!");
         
         if (ghost != null) 
         {
             ghost.gameObject.SetActive(false);
         }
+        OnEscaped?.Invoke();
     }
 
     private void ResetState()
