@@ -8,8 +8,15 @@
 | 0002 | [Приховування гравця поза Regular](0002-player-visibility.uk.md) | `task/0002-player-visibility` | новий `PlayerVisibility.cs` |
 | 0003 | [Зміна розміру Prey на ліфті](0003-lift-prey-resizing.uk.md) | `task/0003-lift-prey-resizing` | `LiftPlatform.cs`, `Lift.cs`, `InteractableObject.cs` |
 | 0004 | [Темрява в коридорах](0004-corridor-darkness.uk.md) | `task/0004-corridor-darkness` | новий `CorridorDarkness.cs`, новий шейдер, `PreyFace/*.mat` |
+| 0005 | [Респавн кулі разом із гравцем](0005-death-respawn.uk.md) | `task/0005-death-respawn` | `PlayerStateManager.cs` (лише `Die()`), `BallFollower.cs` |
+| 0006 | [Shopping тримається, Catching прибрано](0006-player-states-cleanup.uk.md) | `task/0006-player-states-cleanup` | `PlayerStateManager.cs`, `PlayerMovement.cs`, `PlayerAnimator.cs` — **після злиття #5 і 0005** |
+| 0007 | [Продаж лише через Lift](0007-sell-via-lift-only.uk.md) | `task/0007-sell-via-lift-only` | `Store.cs` |
+| 0008 | [Екран перемоги в Escape](0008-escape-win-screen.uk.md) | `task/0008-escape-win-screen` | `EscapeSequence.cs`, новий `EscapeExitTrigger.cs`, новий `WinScreen.cs` |
+| 0009 | [Спільний UI для Pond](0009-shared-pond-ui.uk.md) | `task/0009-shared-pond-ui` | `Pond.cs`, новий `PondBaitRouter.cs` |
 
-Чотири задачі змінюють різні файли й жодна не редагує `SampleScene.unity`, тож їх можна виконувати одночасно. Кожна закінчується PR і чеклістом для Inspector, який виконує користувач.
+Задачі змінюють різні файли й жодна не редагує `SampleScene.unity`, тож їх можна виконувати одночасно — окрім 0006, яка чекає на злиття PR #5 (0001) і 0005.
+
+Кожна задача закінчується PR і чеклістом для Inspector, який виконує тестувальник. Відомі проблеми й компроміси: [KNOWN-ISSUES.uk.md](KNOWN-ISSUES.uk.md).
 
 ## Промпт для нового чату
 

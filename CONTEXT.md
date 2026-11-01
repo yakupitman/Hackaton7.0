@@ -11,7 +11,7 @@ The character the user moves with WASD; always in exactly one **Player State**.
 _Avoid_: character, hero
 
 **Player State**:
-The mode the **Player** is in: `Regular`, `Interacting`, `Shopping`, `Catching` or `Dead`. Only `Regular` allows walking and grabbing.
+The mode the **Player** is in: `Regular`, `Interacting`, `Shopping` (inside the **Store**) or `Dead`. Only `Regular` allows walking and grabbing. `Catching` exists in code but is being removed (task 0006).
 _Avoid_: mode, status
 
 **Ball**:
@@ -31,7 +31,7 @@ The **Player**'s single currency. Starts at 500, earned by **Selling** **Prey**,
 _Avoid_: coins, balance
 
 **Death**:
-What happens when a **Catch** fails or the **Ghost** reaches the **Player**: the screen fades out, the **Player** respawns at the world origin and returns to `Regular`. They lose nothing.
+What happens when a **Catch** fails or the **Ghost** reaches the **Player**: the screen fades out, the **Player** and the **Ball** respawn together at the world origin, and the Player returns to `Regular`. They lose nothing.
 _Avoid_: game over, lose
 
 ### Buildings
@@ -44,7 +44,7 @@ _Avoid_: station, structure
 A child object of each **Building** that shows when the **Player** is `Regular` and pressing E would start an interaction with it. At most one is shown at a time.
 
 **Store**:
-The **Building** where the **Player** buys **Bait** and **Chisel Kits**. Its trigger volume also **Sells** any **Prey** dropped into it.
+The **Building** where the **Player** buys **Bait** and **Chisel Kits**. It does not buy **Prey** (decided; its old sell trigger is removed in task 0007).
 _Avoid_: shop
 
 **Pond**:
@@ -106,7 +106,7 @@ How heavy a **Prey** is. It slows it while **Grabbed**.
 The **Money** a **Prey** is worth when **Sold**.
 
 **Sell**:
-Turning a **Prey** into **Money** and destroying it. It happens when the **Prey** enters the **Store** trigger or rises to the **Sell Height**.
+Turning a **Prey** into **Money** and destroying it. It happens only when the **Prey** rises to the **Sell Height**, i.e. via the **Lift**.
 _Avoid_: deliver, cash in
 
 **Sell Height**:
@@ -115,7 +115,7 @@ The world height (y = 10) at which a **Prey** **Sells** itself automatically. Th
 ### Escape
 
 **Escape**:
-The final run. Entering its trigger releases the **Ghost**, and reaching the **Exit** before it catches the **Player** wins the game.
+The final run. Entering its trigger releases the **Ghost**, and reaching the **Exit** before it catches the **Player** wins the game: the game freezes and a win screen offers Restart.
 _Avoid_: escape sequence, chase, ending
 
 **Ghost**:
@@ -148,13 +148,13 @@ _Avoid_: success trigger, finish
 
 - **Prey vs Item vs InteractableObject vs heldItem.** The code calls the same thing `InteractableObject` (class), `item` (`Store`, `HoldManager.heldItem`), "interactable" (`LiftPlatform`) and `Prey` (prefab folder, `Pond.SpawnPrey`, `ClaudeTasks/LiftInteractableResizing.txt`). *Proposal:* **Prey** is the domain term, and `InteractableObject` is just the component that makes it grabbable.
 - **"Interact" is overloaded.** The `Interact` input (E) and the `Interacting` state are about **Buildings**. `InteractableObject` and `interactableLayer` are about mouse-**Grabbed** **Prey**. And `Lift` uses `interactableLayer` to raycast its lever. *Proposal:* "interact" means **Buildings** only, and **Grab** means **Prey**.
-- **`Shopping` state is overwritten immediately.** `Store.BeginInteraction` sets `Shopping`, but `PlayerMovement.TryBeginInteraction` then sets `Interacting`. So `Shopping` (which keeps the HUD visible) never lasts. *Question:* is `Shopping` a real state or just a flavour of `Interacting`?
-- **`Catching` state is unused.** It is declared and has an exit check in `PlayerStateManager`, but nothing ever enters it (see the dialogue). *Question:* remove it, or have the **Pond** set it during a **Catch**?
-- **Two Sell paths.** `Store.OnTriggerEnter` and `InteractableObject.CheckSellCondition` (y ≥ 10) both **Sell**. *Question:* is selling at the **Store** intended, or is the **Lift** meant to be the only way?
+- **`Shopping` state is overwritten immediately.** `Store.BeginInteraction` sets `Shopping`, but `PlayerMovement.TryBeginInteraction` then sets `Interacting`. *Resolved:* `Shopping` is a real state and must stick (task 0006).
+- **`Catching` state is unused.** It is declared and has an exit check in `PlayerStateManager`, but nothing ever enters it (see the dialogue). *Resolved:* remove it; a **Catch** happens in `Interacting` (task 0006).
+- **Two Sell paths.** `Store.OnTriggerEnter` and `InteractableObject.CheckSellCondition` (y ≥ 10) both **Sell**. *Resolved:* the **Lift** is the only way (task 0007).
 - **`liftHeight` means two things.** `Lift.liftHeight` is how far the platform travels (10). `HoldManager.liftHeight` is how high a **Grabbed** **Prey** floats (1). *Proposal:* rename the second to `hoverHeight`.
 - **Chisel Kit vs upgrade.** `Store.OnChiselKitBought`, `BallFollower.TotalChiselUpgrades`, and `PlayerMovement`'s "Upgrades" header with `speedIncreases`. The serialized field is misspelt `chieselKitPrice`. *Proposal:* use **Chisel Kit** everywhere.
 - **Pond is not a pond.** Per `ClaudeTasks/Darkness.txt`, a **Pond** is a door and a corridor that **Prey** comes out of, and there are two cameras (`pondCamera` for choosing **Bait**, `pondCamera2` for the **Catch**). The name is historical. *Question:* keep "Pond" or rename (e.g. "Den" or "Lair")?
-- **Pond UI is wired to one Pond.** The Bait buttons and Catch HUD call `Pond1.SelectBait` directly, so a duplicated **Pond** needs its own wiring, or the UI has to target whichever Pond is active. *Question:* which approach, before more Ponds are added?
+- **Pond UI is wired to one Pond.** The Bait buttons and Catch HUD call `Pond1.SelectBait` directly, so a duplicated **Pond** needs its own wiring, or the UI has to target whichever Pond is active. *Resolved:* one shared UI whose buttons go through a router to the active **Pond** (task 0009).
 - **Bait tiers are bare ints.** `baitType` is 0/1/2 throughout, with colours, prices and odds spread across `Pond`, `Store` and `UIManager` (which hard-codes 3). *Question:* do the tiers have names?
-- **Escape outcome.** `SuccessfulEscape` only logs "WIN!". No win screen or end state exists yet, and nothing in the code calls it (presumably it is wired to the **Exit** trigger in the scene).
-- **Death respawn.** `Die()` moves the player to `Vector3.zero` and disables a `CharacterController`, but the **Player** moves with a `Rigidbody`. The **Ball** isn't moved. *Question:* where should the respawn point be?
+- **Escape outcome.** `SuccessfulEscape` only logs "WIN!", and nothing calls it: the **Exit** trigger in the scene has no script. *Resolved:* win screen + Restart (task 0008).
+- **Death respawn.** `Die()` moves the player to `Vector3.zero` and disables a `CharacterController`, but the **Player** moves with a `Rigidbody`. The **Ball** isn't moved. *Resolved:* keep the world origin, move the **Ball** with the **Player** (task 0005).
