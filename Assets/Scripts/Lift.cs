@@ -16,6 +16,7 @@ public class Lift : Building
     private Camera mainCamera;
     private bool isInteracting;
     private bool isLifting;
+    private Sequence liftSequence;
 
     private void Start()
     {
@@ -58,9 +59,13 @@ public class Lift : Building
     {
         isLifting = true;
         raycastBlocker.SetActive(true);
-        Sequence liftSequence = DOTween.Sequence();
-        // Applies a short shake animation to the lever for tactile visual feedback, then smoothly moves the platform up
-        liftSequence.Append(liftLever.DOShakeRotation(0.3f, new Vector3(0f, 0f, 5f), 30, 90f));
+        liftLever.DOKill();
+        liftSequence?.Kill();
+        // The lever shake stays on the normal update so it looks smooth
+        liftLever.DOShakeRotation(0.3f, new Vector3(0f, 0f, 5f), 30, 90f);
+        // The platform moves in physics steps so LiftPlatform can carry Prey with it
+        liftSequence = DOTween.Sequence().SetUpdate(UpdateType.Fixed);
+        liftSequence.AppendInterval(0.3f);
         liftSequence.Append(liftPlatform.DOMoveY(liftPlatform.position.y + liftHeight, liftDuration).SetEase(Ease.InOutQuad));
         liftSequence.Append(liftPlatform.DOMoveY(0.4125f, liftDuration).SetEase(Ease.InOutQuad));
         liftSequence.OnComplete(() =>

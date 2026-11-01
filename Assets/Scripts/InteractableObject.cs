@@ -5,6 +5,7 @@ public class InteractableObject : MonoBehaviour
 {
     public float Weight = 1f;
     public int Price;
+    public bool IsHeld => isHeld;
 
     private float sellHeight = 10f;
     private string outlineColorProperty = "_Outline_Color";
