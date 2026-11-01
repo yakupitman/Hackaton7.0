@@ -58,6 +58,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void TrackMoveDirection()
     {
+        // Facing is frozen outside Regular, so the Building ray must not drift either
+        if (PlayerStateManager.Instance.CurrentState != PlayerState.Regular) return;
         Vector2 input = InputManager.Instance.MoveDirection;
         if (input.sqrMagnitude > 0.01f) lastMoveDirection = new Vector3(input.x, 0f, input.y).normalized;
     }
@@ -65,18 +67,10 @@ public class PlayerMovement : MonoBehaviour
     private void HandleInteractionInput()
     {
         if (!InputManager.Instance.Interact) return;
-        
         PlayerState state = PlayerStateManager.Instance.CurrentState;
-        
-        if (state == PlayerState.Regular) 
-        {
-            TryBeginInteraction();
-        }
-        // Додано перевірку на стан Shopping, щоб магазин можна було закрити кнопкою взаємодії
-        else if (state == PlayerState.Interacting || state == PlayerState.Shopping) 
-        {
-            EndCurrentInteraction();
-        }
+        if (state == PlayerState.Regular) TryBeginInteraction();
+        // Any Building state (Interacting, Shopping) is left with E; Dead waits for the fade
+        else if (state != PlayerState.Dead) EndCurrentInteraction();
     }
 
     private Building FindTargetBuilding()
@@ -102,10 +96,9 @@ public class PlayerMovement : MonoBehaviour
         Building building = FindTargetBuilding();
         if (building == null) return;
         currentBuilding = building;
-        // 1. Спочатку встановлюємо базовий стан
-        PlayerStateManager.Instance.SetState(PlayerState.Interacting);
-        // 2. Потім викликаємо логіку будівлі (Store автоматично змінить стан на Shopping)
         currentBuilding.BeginInteraction();
+        // Keep a state the Building set itself (Store sets Shopping), otherwise default to Interacting
+        if (PlayerStateManager.Instance.CurrentState == PlayerState.Regular) PlayerStateManager.Instance.SetState(PlayerState.Interacting);
     }
 
     private void EndCurrentInteraction()
@@ -117,7 +110,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        if (PlayerStateManager.Instance.CurrentState == PlayerState.Interacting)
+        // Only Regular walks; every other state holds the Player in place but keeps gravity
+        if (PlayerStateManager.Instance.CurrentState != PlayerState.Regular)
         {
             rigidBody.linearVelocity = new Vector3(0f, rigidBody.linearVelocity.y, 0f);
             return;
@@ -129,6 +123,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Rotate()
     {
+        if (PlayerStateManager.Instance.CurrentState != PlayerState.Regular) return;
         Vector2 input = InputManager.Instance.MoveDirection;
         if (input.sqrMagnitude > 0.01f)
         {

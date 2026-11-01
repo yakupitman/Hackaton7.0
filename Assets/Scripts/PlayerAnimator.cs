@@ -21,7 +21,8 @@ public class PlayerAnimator : MonoBehaviour
 
     private void UpdateAnimationTree()
     {
-        if (PlayerStateManager.Instance != null && PlayerStateManager.Instance.CurrentState == PlayerState.Interacting)
+        // Idle in every non-Regular state, since only Regular can move
+        if (PlayerStateManager.Instance != null && PlayerStateManager.Instance.CurrentState != PlayerState.Regular)
         {
             animator.SetFloat(blendParameter, 0f);
             animator.speed = 1f;

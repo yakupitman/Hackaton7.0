@@ -6,7 +6,6 @@ using TMPro;
 public enum PlayerState
 {
     Regular,
-    Catching,
     Interacting,
     Shopping,
     Dead
@@ -38,6 +37,7 @@ public class PlayerStateManager : MonoBehaviour
     [Header("Teleport Consumable")]
     [SerializeField] private int teleportConsumableCount = 5;
     [SerializeField] private TextMeshProUGUI teleportConsumableText;
+    [SerializeField] private Vector3 teleportPosition = new Vector3(11f, 0f, 7f);
 
     private void Awake()
     {
@@ -63,19 +63,6 @@ public class PlayerStateManager : MonoBehaviour
         {
             fadeScreen.alpha = 0f;
             fadeScreen.blocksRaycasts = false;
-        }
-    }
-
-    private void Update()
-    {
-        CheckCatchingExit();
-    }
-
-    private void CheckCatchingExit()
-    {
-        if (CurrentState == PlayerState.Catching && InputManager.Instance.Interact)
-        {
-            SetState(PlayerState.Regular);
         }
     }
 
@@ -109,15 +96,7 @@ public class PlayerStateManager : MonoBehaviour
         teleportConsumableCount--;
         UpdateTeleportText();
 
-        if (playerTransform != null)
-        {
-            CharacterController cc = playerTransform.GetComponent<CharacterController>();
-            if (cc != null) cc.enabled = false;
-            
-            playerTransform.position = new Vector3(11f, 0f, 7f);
-            
-            if (cc != null) cc.enabled = true;
-        }
+        TeleportPlayerAndBall(teleportPosition);
     }
 
     public void AddTeleport(int amount)
@@ -144,7 +123,7 @@ public class PlayerStateManager : MonoBehaviour
         {
             // Fallback: never leave the Player stuck in Dead when the fade is not wired up
             Debug.LogWarning("PlayerStateManager: fadeScreen or playerTransform is not assigned, respawning without a fade.");
-            RespawnAtOrigin();
+            TeleportPlayerAndBall(Vector3.zero);
             DOVirtual.DelayedCall(1f, () => SetState(PlayerState.Regular));
             return;
         }
@@ -153,7 +132,7 @@ public class PlayerStateManager : MonoBehaviour
         deathSequence.Append(fadeScreen.DOFade(1f, 0.5f));
         deathSequence.AppendInterval(1f);
         // The screen is black here, so the teleport is not visible
-        deathSequence.AppendCallback(RespawnAtOrigin);
+        deathSequence.AppendCallback(() => TeleportPlayerAndBall(Vector3.zero));
         deathSequence.Append(fadeScreen.DOFade(0f, 0.5f));
         deathSequence.AppendCallback(() =>
         {
@@ -162,24 +141,23 @@ public class PlayerStateManager : MonoBehaviour
         });
     }
 
-    private void RespawnAtOrigin()
+    private void TeleportPlayerAndBall(Vector3 position)
     {
-        Vector3 respawnPosition = Vector3.zero;
         if (playerTransform != null)
         {
             // Move the Rigidbody too, otherwise its velocity and interpolation fight the teleport
             Rigidbody playerBody = playerTransform.GetComponent<Rigidbody>();
             if (playerBody != null)
             {
-                playerBody.position = respawnPosition;
+                playerBody.position = position;
                 playerBody.linearVelocity = Vector3.zero;
                 playerBody.angularVelocity = Vector3.zero;
             }
-            playerTransform.position = respawnPosition;
+            playerTransform.position = position;
         }
         // The Ball is gone after the 5th Chisel Kit
         BallFollower ball = FindFirstObjectByType<BallFollower>();
-        if (ball != null) ball.TeleportTo(respawnPosition + Vector3.back * 1f);
+        if (ball != null) ball.TeleportTo(position + Vector3.back * 1f);
     }
 
     public void AddMoney(int amount)

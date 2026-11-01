@@ -25,6 +25,12 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 
 - **Double-click spends two Bait.** Clicking a Bait button twice during the 0.25 s panel fade can call `SelectBait` twice. Found in 0009 (PR #15).
 
+- **A Catch never ends the Pond interaction.** After a successful or failed Catch, `Pond` sets the state but never calls `EndInteraction()`, so `PlayerMovement.currentBuilding` still points at the Pond. Harmless today, because the next E replaces it. Found in 0006 (PR #19).
+- **E leaves the Lift mid-ride.** You can leave the Lift while the platform is still moving. Found in 0006 (PR #19).
+- **Restart leaks the Input System actions.** Each Restart destroys the `InputManager` without disposing its actions wrapper. Fixing it needs `InputManager.cs`. Found in 0008 (PR #18).
+- **The win screen doesn't block all input.** While frozen, E and the mouse still reach gameplay code, and other audio keeps playing. Found in 0008 (PR #18).
+- **Restart lists the persistent managers by hand.** Any new `DontDestroyOnLoad` manager must also be added to `WinScreen.Restart()`.
+
 ## Trade-offs left by finished tasks
 
 | From | Issue | Fix if it shows up in testing |
@@ -38,6 +44,7 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 | 0005 (PR #14) | The Ball respawns with its centre at y = 0 and may sit half in the floor. | Add a small height offset in the respawn helper. |
 | 0005 (PR #14) | The floor and walls at the world centre `(0, 0, 0)` weren't checked (the colliders under `HotelWallsParent`). | Test the respawn spot; move it if needed. |
 | 0009 (PR #15) | `Pond.ActivePond` isn't cleared when a Catch ends in success or Death, only on E or destroy. Harmless: the next Pond entered overwrites it. | None. |
+| 0010 (PR #20) | Teleport moves the Player instantly with no fade, so the Cinemachine camera may visibly sweep across the map to catch up. | Warp the camera on teleport (e.g. `CinemachineCamera.OnTargetObjectWarped`), or add a short fade like Death. |
 | 0004 | The Prey face materials now draw over other transparent effects (e.g. Incense particles). | Lower the faces' queue offset, or raise the particles' queue. |
 | 0004 | Builds can't find `Custom/CorridorDarkness` through `Shader.Find` unless it's in *Always Included Shaders* or assigned in the Inspector. | Follow the 0004 Inspector checklist. |
 
