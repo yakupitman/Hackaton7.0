@@ -5,6 +5,7 @@ using Unity.Cinemachine;
 public class EscapeSequence : MonoBehaviour
 {
     public UnityEvent OnEscaped;
+    public UnityEvent OnPlayerCaught;
 
     [Header("References")]
     [SerializeField] private Transform player;
@@ -107,6 +108,7 @@ public class EscapeSequence : MonoBehaviour
         {
             isChasing = false;
             ResetState();
+            OnPlayerCaught?.Invoke();
             PlayerStateManager.Instance.Die();
         }
     }
