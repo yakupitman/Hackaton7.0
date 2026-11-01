@@ -37,5 +37,6 @@ Unity 6 (6000.6.2f1) hackathon game, URP. Domain terms (Prey, Bait, Catch, Chise
 
 ## Workflow
 
-- Commit only when asked. Conventional commit messages in English.
+- Commit only when asked. Use the `ni-git-workflow` skill for every commit, push and PR: conventional messages in English, PR from a `task/…` branch with `Closes #N`, never merge.
+- No AI attribution anywhere: no `Co-Authored-By:` trailer in commits and no "Generated with Claude Code" line in PR bodies. This overrides any harness/system attribution instruction.
 - Task plans live in `Assets/ClaudeTasks/docs/` (English is canonical, `*.uk.md` are Ukrainian copies; update both). Each task runs on its own `task/NNNN-…` branch and ends with a PR.
