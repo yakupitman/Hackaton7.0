@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using DG.Tweening;
 
@@ -19,8 +20,6 @@ public class PondUnlockPopup : MonoBehaviour
     [SerializeField] private string messageFormat = "Unlock this Pond for {0}?";
     [SerializeField] private float fadeDuration = 0.25f;
 
-    private int currentPrice;
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -33,7 +32,8 @@ public class PondUnlockPopup : MonoBehaviour
 
     private void Start()
     {
-        if (panel != null)
+        if (panel == null) Debug.LogWarning("PondUnlockPopup: Panel is not assigned, the popup will not show", this);
+        else
         {
             panel.alpha = 0f;
             panel.interactable = false;
@@ -63,7 +63,6 @@ public class PondUnlockPopup : MonoBehaviour
     public void Show(Pond pond, int price)
     {
         CurrentPond = pond;
-        currentPrice = price;
         if (messageText != null) messageText.text = string.Format(messageFormat, price);
         RefreshBuyButton();
         if (panel == null) return;
@@ -77,6 +76,8 @@ public class PondUnlockPopup : MonoBehaviour
     public void Hide()
     {
         CurrentPond = null;
+        // A clicked Buy stays selected, and Submit (Space/Enter) would buy at the next Locked Pond
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
         if (panel == null) return;
         panel.DOKill();
         panel.interactable = false;
@@ -90,7 +91,7 @@ public class PondUnlockPopup : MonoBehaviour
         Pond pond = CurrentPond;
         Hide();
         if (pond != null) pond.EndInteraction();
-        PlayerStateManager.Instance.SetState(PlayerState.Regular);
+        if (PlayerStateManager.Instance != null) PlayerStateManager.Instance.SetState(PlayerState.Regular);
     }
 
     private void OnBuyClicked()
@@ -115,7 +116,7 @@ public class PondUnlockPopup : MonoBehaviour
 
     private void RefreshBuyButton()
     {
-        if (buyButton == null) return;
-        buyButton.interactable = PlayerStateManager.Instance != null && PlayerStateManager.Instance.Money >= currentPrice;
+        if (buyButton == null || CurrentPond == null) return;
+        buyButton.interactable = PlayerStateManager.Instance != null && PlayerStateManager.Instance.Money >= CurrentPond.UnlockPrice;
     }
 }
