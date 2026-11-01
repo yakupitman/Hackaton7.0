@@ -251,7 +251,8 @@ public class Guidelines : MonoBehaviour
         panel.interactable = visible;
         panel.blocksRaycasts = visible;
         if (instant) panel.alpha = visible ? 1f : 0f;
-        else panel.DOFade(visible ? 1f : 0f, fadeDuration).SetLink(gameObject);
+        // Unscaled, so the panel still fades out when a successful Escape freezes the game
+        else panel.DOFade(visible ? 1f : 0f, fadeDuration).SetUpdate(true).SetLink(gameObject);
     }
 
     private void OnStateChanged(PlayerState state)
