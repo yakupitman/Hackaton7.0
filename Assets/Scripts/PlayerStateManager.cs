@@ -70,6 +70,11 @@ public class PlayerStateManager : MonoBehaviour
             fadeScreen.alpha = 0f;
             fadeScreen.blocksRaycasts = false;
         }
+        if (FindFirstObjectByType<MainMenu>() == null)
+        {
+            Debug.LogWarning("PlayerStateManager: no active MainMenu in the scene, starting the game without it.");
+            SetState(PlayerState.Regular);
+        }
     }
 
     public void SetState(PlayerState newState)

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -22,6 +23,11 @@ public class MainMenu : MonoBehaviour
     {
         SetMenuVisible(true);
         if (menuCamera != null) menuCamera.enabled = true;
+        if (fade != null)
+        {
+            fade.alpha = 0f;
+            fade.blocksRaycasts = false;
+        }
         if (startButton != null) startButton.onClick.AddListener(StartGame);
         if (quitButton != null) quitButton.onClick.AddListener(QuitGame);
     }
@@ -36,25 +42,8 @@ public class MainMenu : MonoBehaviour
     {
         if (isStarting) return;
         isStarting = true;
-        SetButtonsInteractable(false);
-        if (fade == null)
-        {
-            BeginGame();
-            OnGameStarted?.Invoke();
-            return;
-        }
-        fade.DOKill();
-        fade.blocksRaycasts = true;
-        Sequence startSequence = DOTween.Sequence().SetLink(gameObject);
-        startSequence.Append(fade.DOFade(1f, fadeDuration));
-        // The screen is black here, so the camera switch and the Player appearing are not visible
-        startSequence.AppendCallback(BeginGame);
-        startSequence.Append(fade.DOFade(0f, fadeDuration));
-        startSequence.AppendCallback(() =>
-        {
-            fade.blocksRaycasts = false;
-            OnGameStarted?.Invoke();
-        });
+        if (menuPanel != null) menuPanel.interactable = false;
+        StartCoroutine(StartGameRoutine());
     }
 
     public void QuitGame()
@@ -65,25 +54,39 @@ public class MainMenu : MonoBehaviour
 #endif
     }
 
-    private void BeginGame()
+    private IEnumerator StartGameRoutine()
     {
+        if (fade != null)
+        {
+            fade.DOKill();
+            fade.blocksRaycasts = true;
+            yield return fade.DOFade(1f, fadeDuration).SetLink(gameObject).WaitForCompletion();
+        }
+        else
+        {
+            // Leave the click frame first, so the same key press can't also act in Regular
+            yield return null;
+        }
         SetMenuVisible(false);
         if (menuCamera != null) menuCamera.enabled = false;
         PlayerStateManager.Instance.SetState(PlayerState.Regular);
+        // Stay black until the CinemachineBrain finishes blending from the MenuCamera, so the camera move is never seen
+        yield return null;
+        CinemachineBrain brain = Camera.main != null ? Camera.main.GetComponent<CinemachineBrain>() : null;
+        while (brain != null && brain.IsBlending) yield return null;
+        if (fade != null)
+        {
+            yield return fade.DOFade(0f, fadeDuration).SetLink(gameObject).WaitForCompletion();
+            fade.blocksRaycasts = false;
+        }
+        OnGameStarted?.Invoke();
     }
 
     private void SetMenuVisible(bool visible)
     {
         if (menuPanel == null) return;
-        menuPanel.DOKill();
         menuPanel.alpha = visible ? 1f : 0f;
         menuPanel.interactable = visible;
         menuPanel.blocksRaycasts = visible;
-    }
-
-    private void SetButtonsInteractable(bool interactable)
-    {
-        if (startButton != null) startButton.interactable = interactable;
-        if (quitButton != null) quitButton.interactable = interactable;
     }
 }
