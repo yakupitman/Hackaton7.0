@@ -16,6 +16,8 @@ public class Store : Building
     [SerializeField] private int bait1Price = 20;
     [SerializeField] private int bait2Price = 30;
     [SerializeField] private int chieselKitPrice = 50;
+    [SerializeField] private int teleportPrice = 40;
+    [SerializeField] private int boosterPrice = 100;
 
     private CanvasGroup canvasGroup;
     private RectTransform rectTransform;
@@ -38,13 +40,14 @@ public class Store : Building
         PlayerStateManager.Instance.SetState(PlayerState.Shopping);
         base.BeginInteraction();
         storeCamera.enabled = true;
+        
         if (storeInterface != null && canvasGroup != null && rectTransform != null)
         {
             rectTransform.DOKill();
             canvasGroup.DOKill();
             storeInterface.SetActive(true);
             canvasGroup.alpha = 0f;
-            rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, originalY + -50f);
+            rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, originalY - 50f);
             canvasGroup.DOFade(1f, 0.25f).SetEase(Ease.OutQuad);
             rectTransform.DOAnchorPosY(originalY, 0.25f).SetEase(Ease.OutQuad);
         }
@@ -52,26 +55,31 @@ public class Store : Building
 
     public override void EndInteraction()
     {
+        PlayerStateManager.Instance.SetState(PlayerState.Regular);
         base.EndInteraction();
         storeCamera.enabled = false;
+        
         if (storeInterface != null && canvasGroup != null && rectTransform != null)
         {
             rectTransform.DOKill();
             canvasGroup.DOKill();
             canvasGroup.DOFade(0f, 0.25f).SetEase(Ease.InQuad);
-            rectTransform.DOAnchorPosY(originalY + -50f, 0.25f).SetEase(Ease.InQuad).OnComplete(() =>
+            rectTransform.DOAnchorPosY(originalY - 50f, 0.25f).SetEase(Ease.InQuad).OnComplete(() =>
             {
                 storeInterface.SetActive(false);
             });
         }
-        else if (storeInterface != null) storeInterface.SetActive(false);
+        else if (storeInterface != null) 
+        {
+            storeInterface.SetActive(false);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         InteractableObject item = other.GetComponent<InteractableObject>();
         if (item == null) return;
-        // Processes the sale by adding the item's price to the player's balance and destroying the object
+        
         PlayerStateManager.Instance.AddMoney(item.Price);
         Destroy(other.gameObject);
     }
@@ -85,7 +93,7 @@ public class Store : Building
             2 => bait2Price,
             _ => bait0Price
         };
-        // Deducts bait cost and adds one unit to player inventory
+        
         if (PlayerStateManager.Instance.SpendMoney(price))
         {
             PlayerStateManager.Instance.AddBait(baitType, 1);
@@ -94,8 +102,26 @@ public class Store : Building
 
     public void BuyChiselKit()
     {
-        // Deducts chisel kit price and notifies subscribed listeners
-        if (PlayerStateManager.Instance.SpendMoney(chieselKitPrice)) OnChiselKitBought?.Invoke();
+        if (PlayerStateManager.Instance.SpendMoney(chieselKitPrice)) 
+        {
+            OnChiselKitBought?.Invoke();
+        }
         EndInteraction();
+    }
+
+    public void BuyTeleportation()
+    {
+        if (PlayerStateManager.Instance.SpendMoney(teleportPrice))
+        {
+            PlayerStateManager.Instance.AddTeleport(1);
+        }
+    }
+
+    public void BuyBooster()
+    {
+        if (PlayerStateManager.Instance.SpendMoney(boosterPrice))
+        {
+            Debug.Log("Booster придбано. Ефект буде реалізовано згодом.");
+        }
     }
 }

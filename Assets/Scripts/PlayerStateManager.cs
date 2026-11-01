@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using DG.Tweening;
+using TMPro;
 
 public enum PlayerState
 {
@@ -34,6 +35,10 @@ public class PlayerStateManager : MonoBehaviour
     [SerializeField] private CanvasGroup fadeScreen;
     [SerializeField] private Transform playerTransform;
 
+    [Header("Teleport Consumable")]
+    [SerializeField] private int teleportConsumableCount = 5;
+    [SerializeField] private TextMeshProUGUI teleportConsumableText;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -52,6 +57,7 @@ public class PlayerStateManager : MonoBehaviour
         CurrentState = PlayerState.Regular;
         Money = 500;
         OnMoneyChanged?.Invoke(Money);
+        UpdateTeleportText();
         
         if (fadeScreen != null)
         {
@@ -94,6 +100,39 @@ public class PlayerStateManager : MonoBehaviour
         }
 
         OnStateChanged?.Invoke(CurrentState);
+    }
+
+    public void UseTeleport()
+    {
+        if (CurrentState != PlayerState.Regular || teleportConsumableCount <= 0) return;
+
+        teleportConsumableCount--;
+        UpdateTeleportText();
+
+        if (playerTransform != null)
+        {
+            CharacterController cc = playerTransform.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+            
+            playerTransform.position = new Vector3(11f, 0f, 7f);
+            
+            if (cc != null) cc.enabled = true;
+        }
+    }
+
+    public void AddTeleport(int amount)
+    {
+        if (amount <= 0) return;
+        teleportConsumableCount += amount;
+        UpdateTeleportText();
+    }
+
+    private void UpdateTeleportText()
+    {
+        if (teleportConsumableText != null)
+        {
+            teleportConsumableText.text = teleportConsumableCount.ToString();
+        }
     }
 
     public void Die()

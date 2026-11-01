@@ -99,6 +99,18 @@ public class BallFollower : MonoBehaviour
     {
         Vector3 toPlayer = player.position - transform.position;
         float distance = toPlayer.magnitude;
+
+        // Примусова телепортація, якщо дистанція перевищує 10f
+        if (distance > 10f)
+        {
+            transform.position = player.position;
+            
+            // Скидаємо прискорення, щоб кулю не "вистрілило" після телепортації
+            ballRigidbody.linearVelocity = Vector3.zero;
+            ballRigidbody.angularVelocity = Vector3.zero;
+            return;
+        }
+
         if (distance <= ropeLength) return;
         
         float stretch = distance - ropeLength;

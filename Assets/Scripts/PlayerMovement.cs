@@ -63,9 +63,18 @@ public class PlayerMovement : MonoBehaviour
     private void HandleInteractionInput()
     {
         if (!InputManager.Instance.Interact) return;
+        
         PlayerState state = PlayerStateManager.Instance.CurrentState;
-        if (state == PlayerState.Regular) TryBeginInteraction();
-        else if (state == PlayerState.Interacting) EndCurrentInteraction();
+        
+        if (state == PlayerState.Regular) 
+        {
+            TryBeginInteraction();
+        }
+        // Додано перевірку на стан Shopping, щоб магазин можна було закрити кнопкою взаємодії
+        else if (state == PlayerState.Interacting || state == PlayerState.Shopping) 
+        {
+            EndCurrentInteraction();
+        }
     }
 
     private void TryBeginInteraction()
@@ -76,8 +85,10 @@ public class PlayerMovement : MonoBehaviour
         Building building = hit.collider.GetComponent<Building>();
         if (building == null) return;
         currentBuilding = building;
-        currentBuilding.BeginInteraction();
+        // 1. Спочатку встановлюємо базовий стан
         PlayerStateManager.Instance.SetState(PlayerState.Interacting);
+        // 2. Потім викликаємо логіку будівлі (Store автоматично змінить стан на Shopping)
+        currentBuilding.BeginInteraction();
     }
 
     private void EndCurrentInteraction()
