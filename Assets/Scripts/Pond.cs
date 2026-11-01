@@ -23,6 +23,8 @@ public class Pond : Building
     public static Pond ActivePond { get; private set; }
 
     public UnityEvent OnUnlocked;
+    public UnityEvent OnCatchStarted;
+    public UnityEvent OnPreyCaught;
     public bool IsUnlocked => isUnlocked;
     public int UnlockPrice => unlockPrice;
 
@@ -355,6 +357,7 @@ public class Pond : Building
             flashlight.transform.localRotation = initialFlashlightRotation;
             flashlight.SetActive(true);
         }
+        OnCatchStarted?.Invoke();
     }
 
     private void StopMinigame()
@@ -549,6 +552,7 @@ public class Pond : Building
             if (pondCamera2 != null) pondCamera2.enabled = false;
             PlayerStateManager.Instance.SetState(PlayerState.Regular);
             SpawnPrey();
+            OnPreyCaught?.Invoke();
         }
         else
         {
