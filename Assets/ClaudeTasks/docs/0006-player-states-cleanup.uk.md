@@ -2,6 +2,7 @@
 
 Джерело: відома проблема (без брифу). Див. `KNOWN-ISSUES.uk.md`.
 Гілка: `task/0006-player-states-cleanup` · Англійська версія (основна): `0006-player-states-cleanup.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/10
 
 ## Мета
 

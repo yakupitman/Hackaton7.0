@@ -2,6 +2,7 @@
 
 Source: known issue (no brief). See `KNOWN-ISSUES.md`.
 Branch: `task/0008-escape-win-screen` · Ukrainian copy: `0008-escape-win-screen.uk.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/12
 
 ## Goal
 

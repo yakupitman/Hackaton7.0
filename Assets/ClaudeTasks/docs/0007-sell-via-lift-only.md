@@ -2,6 +2,7 @@
 
 Source: known issue (no brief). See `KNOWN-ISSUES.md`.
 Branch: `task/0007-sell-via-lift-only` · Ukrainian copy: `0007-sell-via-lift-only.uk.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/11
 
 ## Goal
 

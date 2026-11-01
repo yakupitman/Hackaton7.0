@@ -2,6 +2,7 @@
 
 Джерело: відома проблема (без брифу). Див. `KNOWN-ISSUES.uk.md`.
 Гілка: `task/0009-shared-pond-ui` · Англійська версія (основна): `0009-shared-pond-ui.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/13
 
 ## Мета
 

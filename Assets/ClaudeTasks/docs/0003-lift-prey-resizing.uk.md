@@ -2,6 +2,7 @@
 
 Оригінальне завдання: `Assets/ClaudeTasks/LiftInteractableResizing.txt`
 Гілка: `task/0003-lift-prey-resizing` · Англійська версія (основна): `0003-lift-prey-resizing.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/3
 
 ## Мета
 

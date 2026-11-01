@@ -2,6 +2,7 @@
 
 Оригінальне завдання: `Assets/ClaudeTasks/Darkness.txt`
 Гілка: `task/0004-corridor-darkness` · Англійська версія (основна): `0004-corridor-darkness.md`
+Issue: https://github.com/yakupitman/Hackaton7.0/issues/4
 
 ## Мета
 
