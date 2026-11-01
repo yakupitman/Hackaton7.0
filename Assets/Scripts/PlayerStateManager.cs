@@ -138,38 +138,48 @@ public class PlayerStateManager : MonoBehaviour
     public void Die()
     {
         if (CurrentState == PlayerState.Dead) return;
-        
         SetState(PlayerState.Dead);
         OnPlayerDeath?.Invoke();
-
-        if (fadeScreen != null && playerTransform != null)
+        if (fadeScreen == null || playerTransform == null)
         {
-            fadeScreen.blocksRaycasts = true;
-            
-            Sequence deathSequence = DOTween.Sequence();
-            
-            deathSequence.Append(fadeScreen.DOFade(1f, 0.5f));
-            
-            deathSequence.AppendInterval(1f);
-            
-            deathSequence.AppendCallback(() => 
-            {
-                CharacterController cc = playerTransform.GetComponent<CharacterController>();
-                if (cc != null) cc.enabled = false;
-                
-                playerTransform.position = Vector3.zero;
-                
-                if (cc != null) cc.enabled = true;
-            });
-            
-            deathSequence.Append(fadeScreen.DOFade(0f, 0.5f));
-            
-            deathSequence.AppendCallback(() => 
-            {
-                fadeScreen.blocksRaycasts = false;
-                SetState(PlayerState.Regular);
-            });
+            // Fallback: never leave the Player stuck in Dead when the fade is not wired up
+            Debug.LogWarning("PlayerStateManager: fadeScreen or playerTransform is not assigned, respawning without a fade.");
+            RespawnAtOrigin();
+            DOVirtual.DelayedCall(1f, () => SetState(PlayerState.Regular));
+            return;
         }
+        fadeScreen.blocksRaycasts = true;
+        Sequence deathSequence = DOTween.Sequence();
+        deathSequence.Append(fadeScreen.DOFade(1f, 0.5f));
+        deathSequence.AppendInterval(1f);
+        // The screen is black here, so the teleport is not visible
+        deathSequence.AppendCallback(RespawnAtOrigin);
+        deathSequence.Append(fadeScreen.DOFade(0f, 0.5f));
+        deathSequence.AppendCallback(() =>
+        {
+            fadeScreen.blocksRaycasts = false;
+            SetState(PlayerState.Regular);
+        });
+    }
+
+    private void RespawnAtOrigin()
+    {
+        Vector3 respawnPosition = Vector3.zero;
+        if (playerTransform != null)
+        {
+            // Move the Rigidbody too, otherwise its velocity and interpolation fight the teleport
+            Rigidbody playerBody = playerTransform.GetComponent<Rigidbody>();
+            if (playerBody != null)
+            {
+                playerBody.position = respawnPosition;
+                playerBody.linearVelocity = Vector3.zero;
+                playerBody.angularVelocity = Vector3.zero;
+            }
+            playerTransform.position = respawnPosition;
+        }
+        // The Ball is gone after the 5th Chisel Kit
+        BallFollower ball = FindFirstObjectByType<BallFollower>();
+        if (ball != null) ball.TeleportTo(respawnPosition + Vector3.back * 1f);
     }
 
     public void AddMoney(int amount)

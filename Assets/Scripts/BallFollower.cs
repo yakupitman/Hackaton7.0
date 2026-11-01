@@ -95,6 +95,14 @@ public class BallFollower : MonoBehaviour
         }
     }
 
+    public void TeleportTo(Vector3 position)
+    {
+        ballRigidbody.position = position;
+        transform.position = position;
+        ballRigidbody.linearVelocity = Vector3.zero;
+        ballRigidbody.angularVelocity = Vector3.zero;
+    }
+
     private void ApplyRopeForce()
     {
         Vector3 toPlayer = player.position - transform.position;
