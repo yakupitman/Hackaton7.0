@@ -31,8 +31,9 @@ public class WinScreen : MonoBehaviour
 
     public void Show()
     {
-        Time.timeScale = 0f;
+        // Without a panel there would be no Restart button, so don't freeze
         if (panel == null) return;
+        Time.timeScale = 0f;
         panel.DOKill();
         panel.blocksRaycasts = true;
         // Unscaled update so the fade runs while the game is frozen
