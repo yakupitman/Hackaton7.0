@@ -69,8 +69,8 @@ public class PlayerMovement : MonoBehaviour
         if (!InputManager.Instance.Interact) return;
         PlayerState state = PlayerStateManager.Instance.CurrentState;
         if (state == PlayerState.Regular) TryBeginInteraction();
-        // Any Building state (Interacting, Shopping) is left with E; Dead waits for the fade
-        else if (state != PlayerState.Dead) EndCurrentInteraction();
+        // Any Building state (Interacting, Shopping) is left with E; Dead waits for the fade, Menu for the Start button
+        else if (state != PlayerState.Dead && state != PlayerState.Menu) EndCurrentInteraction();
     }
 
     private Building FindTargetBuilding()
