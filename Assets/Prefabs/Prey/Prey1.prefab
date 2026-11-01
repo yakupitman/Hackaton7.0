@@ -103,8 +103,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7249f986664404c4a9f0d83209688493, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
-  Weight: 1
-  Price: 3
+  Weight: 2
+  Price: 4
 --- !u!65 &72812126781015898
 BoxCollider:
   m_ObjectHideFlags: 0

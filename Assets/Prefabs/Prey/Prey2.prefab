@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
   Weight: 1
-  Price: 3
+  Price: 9
 --- !u!65 &2811057790295645034
 BoxCollider:
   m_ObjectHideFlags: 0
