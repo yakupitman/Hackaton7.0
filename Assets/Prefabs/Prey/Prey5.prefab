@@ -75,7 +75,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 9c7a4c1d7be35a24e8f3aeedd357f501, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: -876546973899608171, guid: d05c7c0f98b56794887b668a0607846e, type: 3}
+      objectReference: {fileID: 2100000, guid: 2a6d5ccab689d344fb6bd414f4c7b386, type: 2}
     - target: {fileID: 919132149155446097, guid: 9c7a4c1d7be35a24e8f3aeedd357f501, type: 3}
       propertyPath: m_Name
       value: Prey5

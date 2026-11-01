@@ -63,7 +63,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: f569a8631d068514996cc6a734d79616, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: -876546973899608171, guid: d05c7c0f98b56794887b668a0607846e, type: 3}
+      objectReference: {fileID: 2100000, guid: 43a8619c57b1c464d9e027723cbbddcc, type: 2}
     - target: {fileID: 919132149155446097, guid: f569a8631d068514996cc6a734d79616, type: 3}
       propertyPath: m_Name
       value: Prey4
