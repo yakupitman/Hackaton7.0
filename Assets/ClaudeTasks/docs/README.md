@@ -13,6 +13,7 @@ English plans are the source of truth; `*.uk.md` files are Ukrainian copies. Kee
 | 0007 | [Sell via Lift only](0007-sell-via-lift-only.md) | `task/0007-sell-via-lift-only` | `Store.cs` |
 | 0008 | [Escape win screen](0008-escape-win-screen.md) | `task/0008-escape-win-screen` | `EscapeSequence.cs`, new `EscapeExitTrigger.cs`, new `WinScreen.cs` |
 | 0009 | [Shared Pond UI](0009-shared-pond-ui.md) | `task/0009-shared-pond-ui` | `Pond.cs`, new `PondBaitRouter.cs` |
+| 0010 | [Teleport moves the Ball too](0010-teleport-with-ball.md) | `task/0010-teleport-with-ball` | `PlayerStateManager.cs` (`UseTeleport()` + respawn helper) — **after #14 merges** |
 
 Tasks touch different files and none edit `SampleScene.unity`, so they can run at the same time — except 0006, which waits for PR #5 (0001) and 0005 to merge.
 
