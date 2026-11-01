@@ -25,6 +25,12 @@ Nothing in this project is compiled or run by the coding agents (no Unity editor
 
 - **Double-click spends two Bait.** Clicking a Bait button twice during the 0.25 s panel fade can call `SelectBait` twice. Found in 0009 (PR #15).
 
+- **A Catch never ends the Pond interaction.** After a successful or failed Catch, `Pond` sets the state but never calls `EndInteraction()`, so `PlayerMovement.currentBuilding` still points at the Pond. Harmless today, because the next E replaces it. Found in 0006 (PR #19).
+- **E leaves the Lift mid-ride.** You can leave the Lift while the platform is still moving. Found in 0006 (PR #19).
+- **Restart leaks the Input System actions.** Each Restart destroys the `InputManager` without disposing its actions wrapper. Fixing it needs `InputManager.cs`. Found in 0008 (PR #18).
+- **The win screen doesn't block all input.** While frozen, E and the mouse still reach gameplay code, and other audio keeps playing. Found in 0008 (PR #18).
+- **Restart lists the persistent managers by hand.** Any new `DontDestroyOnLoad` manager must also be added to `WinScreen.Restart()`.
+
 ## Trade-offs left by finished tasks
 
 | From | Issue | Fix if it shows up in testing |
