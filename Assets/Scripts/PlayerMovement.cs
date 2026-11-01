@@ -2,15 +2,18 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 8f;
+    [Header("Movement Settings")]
+    [SerializeField] private float currentMoveSpeed = 2f;
     [SerializeField] private float rotationSpeed = 15f;
     [SerializeField] private float interactionRange = 4f;
+    
+    [Header("Upgrades")]
+    [SerializeField] private float[] speedIncreases = { 1.4f, 1.2f, 0.9f, 0.9f, 1.6f };
 
     private Rigidbody rigidBody;
     private Vector3 lastMoveDirection = Vector3.forward;
     private Building currentBuilding;
-    private int speedUpgradeIndex;
-    private readonly float[] speedIncreases = { 1f, 0.8f, 0.8f, 0.7f, 0.7f, 1f };
+    private int speedUpgradeIndex = 0;
 
     private void Awake()
     {
@@ -21,13 +24,13 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         Store store = Store.Instance != null ? Store.Instance : FindFirstObjectByType<Store>();
-        if (store != null) store.OnChiselKitBought.AddListener(OnChieselKitBought);
+        if (store != null) store.OnChiselKitBought.AddListener(OnChiselKitBought);
     }
 
     private void OnDestroy()
     {
         Store store = Store.Instance != null ? Store.Instance : FindFirstObjectByType<Store>();
-        if (store != null) store.OnChiselKitBought.RemoveListener(OnChieselKitBought);
+        if (store != null) store.OnChiselKitBought.RemoveListener(OnChiselKitBought);
     }
 
     private void Update()
@@ -42,12 +45,11 @@ public class PlayerMovement : MonoBehaviour
         Rotate();
     }
 
-    public void OnChieselKitBought()
+    public void OnChiselKitBought()
     {
-        // Increases player speed incrementally across each chisel kit purchase
         if (speedUpgradeIndex < speedIncreases.Length)
         {
-            moveSpeed += speedIncreases[speedUpgradeIndex];
+            currentMoveSpeed += speedIncreases[speedUpgradeIndex];
             speedUpgradeIndex++;
         }
     }
@@ -94,7 +96,7 @@ public class PlayerMovement : MonoBehaviour
         }
         Vector2 input = InputManager.Instance.MoveDirection;
         Vector3 movement = new Vector3(input.x, 0f, input.y);
-        rigidBody.linearVelocity = new Vector3(movement.x * moveSpeed, rigidBody.linearVelocity.y, movement.z * moveSpeed);
+        rigidBody.linearVelocity = new Vector3(movement.x * currentMoveSpeed, rigidBody.linearVelocity.y, movement.z * currentMoveSpeed);
     }
 
     private void Rotate()
@@ -103,7 +105,6 @@ public class PlayerMovement : MonoBehaviour
         if (input.sqrMagnitude > 0.01f)
         {
             Vector3 lookDirection = new Vector3(input.x, 0f, input.y);
-            // Smoothly rotates the rigidbody towards the current input direction
             Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
             rigidBody.MoveRotation(Quaternion.Slerp(rigidBody.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }

@@ -17,7 +17,11 @@ public class HoldManager : MonoBehaviour
     private Camera mainCamera;
     private Rigidbody heldItem;
     private InteractableObject heldInteractable;
-    private bool wasItemKinematic;
+    
+    // Збереження фізичних властивостей замість isKinematic
+    private bool wasGravityEnabled;
+    private float originalDrag;
+    private float originalAngularDrag;
 
     private void Awake()
     {
@@ -72,8 +76,20 @@ public class HoldManager : MonoBehaviour
             {
                 heldInteractable = hit.collider.GetComponent<InteractableObject>();
                 heldInteractable.SetHoldState(true);
-                wasItemKinematic = heldItem.isKinematic;
-                heldItem.isKinematic = true;
+                
+                // Кешуємо початковий стан гравітації та опору
+                wasGravityEnabled = heldItem.useGravity;
+                originalDrag = heldItem.linearDamping;
+                originalAngularDrag = heldItem.angularDamping;
+
+                // Залишаємо об'єкт фізичним, але вимикаємо гравітацію, щоб він "висів" у повітрі
+                heldItem.isKinematic = false;
+                heldItem.useGravity = false;
+                
+                // Додаємо високий опір, щоб об'єкт не крутився і не відлітав при зіткненні зі стінами
+                heldItem.linearDamping = 10f;
+                heldItem.angularDamping = 10f;
+                
                 OnItemGrabbed?.Invoke(heldItem.gameObject);
             }
         }
@@ -86,16 +102,23 @@ public class HoldManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, groundLayer))
         {
             Vector3 targetPosition = new Vector3(hit.point.x, hit.point.y + liftHeight, hit.point.z);
-            // Calculates dynamic speed simulating drag based on the item weight, preventing division by zero
             float itemWeight = heldInteractable != null ? Mathf.Max(heldInteractable.Weight, 0.1f) : 1f;
             float currentSpeed = baseDragSpeed / itemWeight;
-            heldItem.MovePosition(Vector3.Lerp(heldItem.position, targetPosition, Time.fixedDeltaTime * currentSpeed));
+
+            // Задаємо вектор напрямку і застосовуємо швидкість безпосередньо.
+            // Це гарантує, що рушій Unity прораховуватиме колізії, і об'єкт зупиниться перед стіною.
+            Vector3 moveDirection = (targetPosition - heldItem.position);
+            heldItem.linearVelocity = moveDirection * currentSpeed;
         }
     }
 
     private void DropItem()
     {
-        heldItem.isKinematic = wasItemKinematic;
+        // Відновлюємо оригінальні фізичні параметри після відпускання ЛКМ
+        heldItem.useGravity = wasGravityEnabled;
+        heldItem.linearDamping = originalDrag;
+        heldItem.angularDamping = originalAngularDrag;
+        
         OnItemDropped?.Invoke(heldItem.gameObject);
         heldItem = null;
         heldInteractable.SetHoldState(false);

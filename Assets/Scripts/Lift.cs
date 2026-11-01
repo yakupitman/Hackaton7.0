@@ -50,7 +50,6 @@ public class Lift : Building
         Ray ray = mainCamera.ScreenPointToRay(mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, interactableLayer))
         {
-            // Verifies if the raycast specifically hit the assigned lever collider before executing the lift sequence
             if (hit.collider.transform == liftLever) ActivateLift();
         }
     }

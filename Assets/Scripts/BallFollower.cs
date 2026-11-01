@@ -11,11 +11,16 @@ public class BallFollower : MonoBehaviour
     [SerializeField] private int ropeSegments = 24;
     [SerializeField] private float ropeWidth = 0.04f;
     [SerializeField] private float sagMultiplier = 0.6f;
-    [SerializeField] private ParticleSystem particleSystem;
+    [SerializeField] private ParticleSystem breakParticleSystem;
     
     private Rigidbody ballRigidbody;
     private LineRenderer lineRenderer;
-    private float currentScale = 1f;
+    private float initialScale;
+    private float currentScale;
+    
+    private const int TotalChiselUpgrades = 5;
+    private const float MinimumScale = 0.33f;
+    private int useCount = 0;
 
     private void Awake()
     {
@@ -25,11 +30,13 @@ public class BallFollower : MonoBehaviour
 
     private void Start()
     {
-        currentScale = transform.localScale.x;
+        initialScale = transform.localScale.x;
+        currentScale = initialScale;
+        
         Store store = Store.Instance != null ? Store.Instance : FindFirstObjectByType<Store>();
         if (store != null)
         {
-            store.OnChiselKitBought.AddListener(OnChieselKitBought);
+            store.OnChiselKitBought.AddListener(OnChiselKitBought);
         }
     }
 
@@ -38,7 +45,7 @@ public class BallFollower : MonoBehaviour
         Store store = Store.Instance != null ? Store.Instance : FindFirstObjectByType<Store>();
         if (store != null)
         {
-            store.OnChiselKitBought.RemoveListener(OnChieselKitBought);
+            store.OnChiselKitBought.RemoveListener(OnChiselKitBought);
         }
     }
 
@@ -61,13 +68,31 @@ public class BallFollower : MonoBehaviour
         UpdateRopeVisual();
     }
 
-    public void OnChieselKitBought()
+    public void OnChiselKitBought()
     {
-        // Logs message, reduces ball scale by 0.1f, and breaks ball when reaching threshold
-        currentScale = Mathf.Round((currentScale - 0.1f) * 10f) / 10f;
-        particleSystem.Play();
-        if (currentScale < 0.45f) Destroy(gameObject);
-        else transform.localScale = Vector3.one * currentScale;
+        if (useCount >= TotalChiselUpgrades) return;
+        
+        useCount++;
+        
+        if (breakParticleSystem != null)
+        {
+            breakParticleSystem.Play();
+        }
+
+        if (useCount >= TotalChiselUpgrades)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            // Calculate step size so scale reaches exactly 0.33f on the 4th use (TotalChiselUpgrades - 1)
+            float scaleReductionsCount = TotalChiselUpgrades - 1;
+            float scaleStep = (initialScale - MinimumScale) / scaleReductionsCount;
+            
+            currentScale -= scaleStep;
+            currentScale = Mathf.Max(MinimumScale, currentScale);
+            transform.localScale = Vector3.one * currentScale;
+        }
     }
 
     private void ApplyRopeForce()
@@ -75,11 +100,12 @@ public class BallFollower : MonoBehaviour
         Vector3 toPlayer = player.position - transform.position;
         float distance = toPlayer.magnitude;
         if (distance <= ropeLength) return;
+        
         float stretch = distance - ropeLength;
         Vector3 direction = toPlayer.normalized;
-        // Apply spring force: stiffness pulls proportionally to stretch, damping reduces oscillation
         Vector3 springForce = direction * (stretch * springStiffness);
         Vector3 dampingForce = -ballRigidbody.linearVelocity * springDamping;
+        
         ballRigidbody.AddForce(springForce + dampingForce, ForceMode.Force);
     }
 
@@ -88,10 +114,11 @@ public class BallFollower : MonoBehaviour
         Vector3 start = playerFeetAnchor.position;
         Vector3 end = ballPivotAnchor.position;
         float distance = Vector3.Distance(start, end);
-        // Slack is how much rope is left hanging loose
         float slack = Mathf.Max(0f, ropeLength - distance);
+
         Vector3 midPoint = (start + end) * 0.5f;
         Vector3 controlPoint = midPoint + Vector3.down * (slack * sagMultiplier);
+        
         for (int i = 0; i < ropeSegments; i++)
         {
             float t = i / (float)(ropeSegments - 1);
@@ -101,7 +128,6 @@ public class BallFollower : MonoBehaviour
 
     private Vector3 QuadraticBezier(Vector3 a, Vector3 control, Vector3 b, float t)
     {
-        // Standard formula: (1-t)^2 * A + 2(1-t)t * C + t^2 * B
         float u = 1f - t;
         return (u * u * a) + (2f * u * t * control) + (t * t * b);
     }

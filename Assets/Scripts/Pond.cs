@@ -11,16 +11,27 @@ public struct PreyProfile
     public int[] availablePersonalities;
 }
 
+public enum FlashlightAxis
+{
+    Y,
+    Z
+}
+
 public class Pond : Building
 {
     [SerializeField] private CinemachineCamera pondCamera;
+    [SerializeField] private CinemachineCamera pondCamera2;
+    [SerializeField] private Animator pondVisualAnimator;
     [SerializeField] private GameObject availableBaits;
+
     [Header("Catching Minigame")]
     [SerializeField] private GameObject catchingMinigame;
     [SerializeField] private RectTransform bar;
     [SerializeField] private RectTransform area;
     [SerializeField] private RectTransform needle;
     [SerializeField] private float needleSpeed = 300f;
+    [SerializeField] private float cameraShakingIntensityMultiplier;
+
     [Header("Prey Spawn Settings")]
     [SerializeField] private PreyProfile[] preyProfiles;
     [SerializeField] private GameObject[] preyVisualList;
@@ -28,7 +39,22 @@ public class Pond : Building
     [SerializeField] private float[] bait1Probabilities = { 20f, 50f, 30f };
     [SerializeField] private float[] bait2Probabilities = { 10f, 30f, 60f };
     [SerializeField] private Transform preyVisualsSpawnPoint;
-    
+
+    [Header("Flashlight Settings")]
+    [SerializeField] private GameObject flashlight;
+    [SerializeField] private FlashlightAxis flashlightRotationAxis = FlashlightAxis.Y;
+
+    [Header("Effects")]
+    [SerializeField] private ParticleSystem incenseParticles;
+    [SerializeField] private float incenseDuration = 2f;
+
+    [Header("Audio Settings")]
+    [SerializeField] private AudioSource mainAudioSource;
+    [SerializeField] private AudioSource ambientAudioSource;
+    [SerializeField] private AudioClip doorSqueakClip;
+    [SerializeField] private AudioClip incenseAromaClip;
+    [SerializeField] private AudioClip intenseAmbientClip;
+
     private bool isMinigameActive;
     private bool isWaitingForBite;
     private float successTimer;
@@ -47,21 +73,40 @@ public class Pond : Building
     private int currentBaitType;
     private int currentPreyIndex;
     private GameObject currentPreyVisual;
-
+    private int preyAnimType;
+    private CinemachineBasicMultiChannelPerlin cameraNoise;
     private CanvasGroup baitsGroup;
     private RectTransform baitsRect;
     private float baitsOrigY;
     private CanvasGroup minigameGroup;
     private RectTransform minigameRect;
     private float minigameOrigY;
-    
     private float targetAreaX;
     private float targetNeedleX;
+    private float areaLimit;
+    private Quaternion initialFlashlightRotation;
+    private static readonly int OpenedHash = Animator.StringToHash("opened");
+    private Tween particleWaitTween;
 
     private void Awake()
     {
         SetupUIElement(availableBaits, out baitsGroup, out baitsRect, out baitsOrigY);
         SetupUIElement(catchingMinigame, out minigameGroup, out minigameRect, out minigameOrigY);
+        
+        if (pondCamera2 != null)
+        {
+            cameraNoise = pondCamera2.GetComponent<CinemachineBasicMultiChannelPerlin>();
+        }
+        if (flashlight == null)
+        {
+            Transform flashlightChild = transform.Find("Flashlight");
+            if (flashlightChild != null) flashlight = flashlightChild.gameObject;
+        }
+        if (flashlight != null)
+        {
+            initialFlashlightRotation = flashlight.transform.localRotation;
+            flashlight.SetActive(false);
+        }
     }
 
     private void SetupUIElement(GameObject uiObject, out CanvasGroup group, out RectTransform rect, out float origY)
@@ -92,11 +137,12 @@ public class Pond : Building
         group.DOFade(0f, 0.25f).SetEase(Ease.InQuad);
         rect.DOAnchorPosY(origY - 50f, 0.25f).SetEase(Ease.InQuad).OnComplete(() => uiObject.SetActive(false));
     }
-    
+
     public override void BeginInteraction()
     {
         base.BeginInteraction();
         pondCamera.enabled = true;
+        if (pondCamera2 != null) pondCamera2.enabled = false;
         ShowUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
     }
 
@@ -105,6 +151,15 @@ public class Pond : Building
         base.EndInteraction();
         StopMinigame();
         pondCamera.enabled = false;
+        if (pondCamera2 != null) pondCamera2.enabled = false;
+        particleWaitTween?.Kill();
+        if (incenseParticles != null)
+        {
+            incenseParticles.Stop();
+            incenseParticles.Clear();
+        }
+        if (mainAudioSource != null) mainAudioSource.Stop();
+        if (ambientAudioSource != null) ambientAudioSource.Stop();
         HideUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
         isWaitingForBite = false;
     }
@@ -113,24 +168,64 @@ public class Pond : Building
     {
         if (!PlayerStateManager.Instance.SpendBait(baitType)) return;
         HideUI(availableBaits, baitsGroup, baitsRect, baitsOrigY);
+        pondCamera.enabled = false;
+        if (pondCamera2 != null) pondCamera2.enabled = true;
+        
+        if (pondVisualAnimator != null)
+        {
+            pondVisualAnimator.SetTrigger(OpenedHash);
+        }
+        if (mainAudioSource != null && doorSqueakClip != null)
+        {
+            mainAudioSource.PlayOneShot(doorSqueakClip);
+        }
+        
         currentBaitType = baitType;
+        Color baitColor = Color.white;
+        
         switch (baitType)
         {
             case 0:
                 biteWaitDuration = Random.Range(4f, 6f);
+                baitColor = Color.blue;
                 break;
             case 1:
                 biteWaitDuration = Random.Range(3f, 5f);
+                baitColor = Color.green;
                 break;
             case 2:
                 biteWaitDuration = Random.Range(2f, 4f);
+                baitColor = new Color(0.5f, 0f, 0.5f);
                 break;
             default:
                 biteWaitDuration = Random.Range(4f, 6f);
+                baitColor = Color.blue;
                 break;
         }
-        biteTimer = 0f;
-        isWaitingForBite = true;
+        
+        particleWaitTween?.Kill();
+        particleWaitTween = DOTween.Sequence()
+            .AppendInterval(2f)
+            .AppendCallback(() => 
+            {
+                if (incenseParticles != null) 
+                {
+                    var mainModule = incenseParticles.main;
+                    mainModule.startColor = new ParticleSystem.MinMaxGradient(baitColor);
+                    incenseParticles.Play();
+                }
+                if (mainAudioSource != null && incenseAromaClip != null)
+                {
+                    mainAudioSource.PlayOneShot(incenseAromaClip);
+                }
+            })
+            .AppendInterval(incenseDuration)
+            .AppendCallback(() => 
+            {
+                DeterminePrey();
+                biteTimer = 0f;
+                isWaitingForBite = true;
+            });
     }
 
     private void DeterminePrey()
@@ -176,20 +271,38 @@ public class Pond : Building
         personalityTimer = 0f;
         currentMinigameDuration = currentPreyIndex < preyProfiles.Length ? preyProfiles[currentPreyIndex].minigameDuration : 5f;
         targetSuccessDuration = Mathf.Max(0f, currentMinigameDuration - 2.5f);
+        
         barHalf = bar.sizeDelta.x * 0.5f;
         areaHalf = area.sizeDelta.x * 0.5f;
         needleHalf = needle.sizeDelta.x * 0.5f;
+        
         areaDirection = Random.value > 0.5f ? 1f : -1f;
-        float areaLimit = barHalf - areaHalf;
+        areaLimit = barHalf - areaHalf;
+        
         targetAreaX = Random.Range(-areaLimit, areaLimit);
         area.anchoredPosition = new Vector2(targetAreaX, 0f);
+        
         float needleLimit = barHalf - needleHalf;
         targetNeedleX = Random.Range(-needleLimit, needleLimit);
         needle.anchoredPosition = new Vector2(targetNeedleX, 0f);
+        
+        preyAnimType = Random.Range(0, 3);
         if (currentPreyIndex < preyVisualList.Length && preyVisualList[currentPreyIndex] != null)
         {
-            currentPreyVisual = Instantiate(preyVisualList[currentPreyIndex], preyVisualsSpawnPoint.position, Quaternion.identity);
-            currentPreyVisual.transform.DOMove(pondCamera.transform.position, currentMinigameDuration).SetEase(Ease.Linear);
+            GameObject visualPrefab = preyVisualList[currentPreyIndex];
+            currentPreyVisual = Instantiate(visualPrefab, preyVisualsSpawnPoint.position, visualPrefab.transform.rotation);
+        }
+        if (ambientAudioSource != null && intenseAmbientClip != null)
+        {
+            ambientAudioSource.clip = intenseAmbientClip;
+            ambientAudioSource.loop = true;
+            ambientAudioSource.volume = 0f;
+            ambientAudioSource.Play();
+        }
+        if (flashlight != null)
+        {
+            flashlight.transform.localRotation = initialFlashlightRotation;
+            flashlight.SetActive(true);
         }
     }
 
@@ -197,13 +310,20 @@ public class Pond : Building
     {
         isMinigameActive = false;
         HideUI(catchingMinigame, minigameGroup, minigameRect, minigameOrigY);
+        
+        if (cameraNoise != null) cameraNoise.AmplitudeGain = 0f;
+        if (ambientAudioSource != null) ambientAudioSource.Stop();
+        
         if (currentPreyVisual != null)
         {
-            currentPreyVisual.transform.DOKill();
             Destroy(currentPreyVisual);
         }
+        if (flashlight != null)
+        {
+            flashlight.SetActive(false);
+        }
     }
-    
+
     private void Update()
     {
         if (isWaitingForBite) WaitForBite();
@@ -212,8 +332,34 @@ public class Pond : Building
             UpdatePersonality();
             MoveArea();
             MoveNeedle();
+            UpdateFlashlightRotation();
+            UpdatePreyVisualAndCamera();
             CheckMinigameState();
         }
+    }
+
+    private void UpdateFlashlightRotation()
+    {
+        if (flashlight == null) return;
+        
+        float maxNeedleX = barHalf - needleHalf;
+        float normalizedNeedleX = maxNeedleX > 0f ? (targetNeedleX / maxNeedleX) : 0f;
+        
+        // Інвертоване обертання та жорстко заданий кут (30f)
+        float targetAngle = normalizedNeedleX * 30f;
+        
+        Vector3 targetEuler = flashlightRotationAxis == FlashlightAxis.Z
+            ? new Vector3(0f, 0f, targetAngle)
+            : new Vector3(0f, targetAngle, 0f);
+            
+        Quaternion targetRotation = initialFlashlightRotation * Quaternion.Euler(targetEuler);
+        
+        // Жорстко задана швидкість обертання (3f)
+        flashlight.transform.localRotation = Quaternion.Lerp(
+            flashlight.transform.localRotation,
+            targetRotation,
+            3f * Time.deltaTime
+        );
     }
 
     private void WaitForBite()
@@ -222,7 +368,6 @@ public class Pond : Building
         if (biteTimer >= biteWaitDuration)
         {
             isWaitingForBite = false;
-            DeterminePrey();
             StartMinigame();
         }
     }
@@ -273,14 +418,13 @@ public class Pond : Building
                 break;
         }
     }
-    
+
     private void MoveArea()
     {
-        float limit = barHalf - areaHalf;
         targetAreaX += areaDirection * currentAreaSpeed * Time.deltaTime;
-        if (Mathf.Abs(targetAreaX) >= limit)
+        if (Mathf.Abs(targetAreaX) >= areaLimit)
         {
-            targetAreaX = Mathf.Sign(targetAreaX) * limit;
+            targetAreaX = Mathf.Sign(targetAreaX) * areaLimit;
             areaDirection *= -1f;
         }
         Vector2 pos = area.anchoredPosition;
@@ -296,6 +440,39 @@ public class Pond : Building
         Vector2 pos = needle.anchoredPosition;
         pos.x = Mathf.Lerp(pos.x, targetNeedleX, Time.deltaTime * 10f);
         needle.anchoredPosition = pos;
+    }
+
+    private void UpdatePreyVisualAndCamera()
+    {
+        if (currentPreyVisual == null || pondCamera2 == null) return;
+        float progress = Mathf.Clamp01(minigameTimer / currentMinigameDuration);
+        
+        if (ambientAudioSource != null)
+        {
+            ambientAudioSource.volume = progress;
+        }
+        if (cameraNoise != null) cameraNoise.AmplitudeGain = Mathf.Lerp(0f, cameraShakingIntensityMultiplier, progress);
+        
+        Vector3 targetPos = pondCamera2.transform.position + pondCamera2.transform.forward * 1f;
+        Vector3 basePos = Vector3.Lerp(preyVisualsSpawnPoint.position, targetPos, progress);
+        float normalizedAreaX = areaLimit > 0 ? area.anchoredPosition.x / areaLimit : 0f;
+        Vector3 mirrorOffset = pondCamera2.transform.right * (normalizedAreaX * 0.75f);
+        Vector3 animOffset = Vector3.zero;
+        
+        switch (preyAnimType)
+        {
+            case 0:
+                animOffset = new Vector3(Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f), 0f);
+                break;
+            case 1:
+                animOffset = pondCamera2.transform.up * (Mathf.Sin(Time.time * 12f) * 0.1f);
+                break;
+            case 2:
+                animOffset = pondCamera2.transform.right * (Mathf.Sin(Time.time * 4f) * 0.4f) + 
+                             pondCamera2.transform.up * (Mathf.Sin(Time.time * 8f) * 0.2f);
+                break;
+        }
+        currentPreyVisual.transform.position = basePos + mirrorOffset + animOffset;
     }
 
     private void CheckMinigameState()
@@ -315,9 +492,22 @@ public class Pond : Building
     private void CompleteMinigame(bool isSuccess)
     {
         StopMinigame();
-        pondCamera.enabled = false;
-        PlayerStateManager.Instance.SetState(PlayerState.Regular);
-        if (isSuccess) SpawnPrey();
+        if (isSuccess)
+        {
+            pondCamera.enabled = false;
+            if (pondCamera2 != null) pondCamera2.enabled = false;
+            PlayerStateManager.Instance.SetState(PlayerState.Regular);
+            SpawnPrey();
+        }
+        else
+        {
+            PlayerStateManager.Instance.Die();
+            DOVirtual.DelayedCall(1.5f, () => 
+            {
+                pondCamera.enabled = false;
+                if (pondCamera2 != null) pondCamera2.enabled = false;
+            });
+        }
     }
 
     private void SpawnPrey()
@@ -327,7 +517,7 @@ public class Pond : Building
             GameObject prefab = preyProfiles[currentPreyIndex].preyPrefab;
             if (prefab != null)
             {
-                GameObject prey = Instantiate(prefab, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2f, gameObject.transform.position.z), Quaternion.identity);
+                GameObject prey = Instantiate(prefab, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2f, gameObject.transform.position.z), prefab.transform.rotation);
                 Rigidbody rb = prey.GetComponent<Rigidbody>();
                 float throwForce = Random.Range(3f, 7f);
                 rb.AddForce(-Vector3.forward * throwForce, ForceMode.Impulse);

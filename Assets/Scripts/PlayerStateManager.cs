@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.Events;
+using DG.Tweening;
 
 public enum PlayerState
 {
     Regular,
     Catching,
-    Interacting
+    Interacting,
+    Shopping,
+    Dead
 }
 
 public class PlayerStateManager : MonoBehaviour
@@ -15,11 +18,21 @@ public class PlayerStateManager : MonoBehaviour
     public UnityEvent<PlayerState> OnStateChanged;
     public UnityEvent<int> OnMoneyChanged;
     public UnityEvent<int, int> OnBaitInventoryChanged;
+    public UnityEvent OnPlayerDeath;
 
     public PlayerState CurrentState { get; private set; }
     public int Money { get; private set; }
 
     [SerializeField] private int[] baitCounts = new int[3];
+    
+    [Header("UI Elements")]
+    [SerializeField] private RectTransform moneyUIElement;
+    [SerializeField] private CanvasGroup moneyUIGroup;
+    [SerializeField] private CanvasGroup globalBaitsUIGroup;
+
+    [Header("Death Sequence")]
+    [SerializeField] private CanvasGroup fadeScreen;
+    [SerializeField] private Transform playerTransform;
 
     private void Awake()
     {
@@ -31,7 +44,8 @@ public class PlayerStateManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         Store store = Store.Instance != null ? Store.Instance : FindFirstObjectByType<Store>();
-        if (store != null) store.OnChiselKitBought.AddListener(OnChiselKitBought);    }
+        if (store != null) store.OnChiselKitBought.AddListener(OnChiselKitBought);
+    }
 
     private void Start()
     {
@@ -39,6 +53,11 @@ public class PlayerStateManager : MonoBehaviour
         Money = 500;
         OnMoneyChanged?.Invoke(Money);
         
+        if (fadeScreen != null)
+        {
+            fadeScreen.alpha = 0f;
+            fadeScreen.blocksRaycasts = false;
+        }
     }
 
     private void Update()
@@ -58,7 +77,60 @@ public class PlayerStateManager : MonoBehaviour
     {
         if (CurrentState == newState) return;
         CurrentState = newState;
+        
+        bool showHUD = (CurrentState == PlayerState.Regular || CurrentState == PlayerState.Shopping);
+        float targetAlpha = showHUD ? 1f : 0f;
+        
+        if (moneyUIGroup != null)
+        {
+            moneyUIGroup.DOFade(targetAlpha, 0.25f);
+            moneyUIGroup.blocksRaycasts = showHUD;
+        }
+        
+        if (globalBaitsUIGroup != null)
+        {
+            globalBaitsUIGroup.DOFade(targetAlpha, 0.25f);
+            globalBaitsUIGroup.blocksRaycasts = showHUD;
+        }
+
         OnStateChanged?.Invoke(CurrentState);
+    }
+
+    public void Die()
+    {
+        if (CurrentState == PlayerState.Dead) return;
+        
+        SetState(PlayerState.Dead);
+        OnPlayerDeath?.Invoke();
+
+        if (fadeScreen != null && playerTransform != null)
+        {
+            fadeScreen.blocksRaycasts = true;
+            
+            Sequence deathSequence = DOTween.Sequence();
+            
+            deathSequence.Append(fadeScreen.DOFade(1f, 0.5f));
+            
+            deathSequence.AppendInterval(1f);
+            
+            deathSequence.AppendCallback(() => 
+            {
+                CharacterController cc = playerTransform.GetComponent<CharacterController>();
+                if (cc != null) cc.enabled = false;
+                
+                playerTransform.position = Vector3.zero;
+                
+                if (cc != null) cc.enabled = true;
+            });
+            
+            deathSequence.Append(fadeScreen.DOFade(0f, 0.5f));
+            
+            deathSequence.AppendCallback(() => 
+            {
+                fadeScreen.blocksRaycasts = false;
+                SetState(PlayerState.Regular);
+            });
+        }
     }
 
     public void AddMoney(int amount)
@@ -66,6 +138,7 @@ public class PlayerStateManager : MonoBehaviour
         if (amount <= 0) return;
         Money += amount;
         OnMoneyChanged?.Invoke(Money);
+        ShakeMoneyUI();
     }
 
     public bool SpendMoney(int amount)
@@ -73,10 +146,19 @@ public class PlayerStateManager : MonoBehaviour
         if (amount <= 0 || Money < amount) return false;
         Money -= amount;
         OnMoneyChanged?.Invoke(Money);
+        ShakeMoneyUI();
         return true;
     }
 
-    // Manages bait inventory and notifies UI elements to synchronize their display
+    private void ShakeMoneyUI()
+    {
+        if (moneyUIElement != null)
+        {
+            moneyUIElement.DOKill(complete: true);
+            moneyUIElement.DOShakeAnchorPos(0.3f, new Vector2(15f, 0f), 15, 90, false, true);
+        }
+    }
+
     public void AddBait(int baitType, int amount)
     {
         if (baitType < 0 || baitType >= baitCounts.Length || amount <= 0) return;
@@ -100,6 +182,6 @@ public class PlayerStateManager : MonoBehaviour
 
     private void OnChiselKitBought()
     {
-        CurrentState =  PlayerState.Regular;
+        SetState(PlayerState.Regular);
     }
 }

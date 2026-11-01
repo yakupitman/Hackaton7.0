@@ -35,6 +35,7 @@ public class Store : Building
 
     public override void BeginInteraction()
     {
+        PlayerStateManager.Instance.SetState(PlayerState.Shopping);
         base.BeginInteraction();
         storeCamera.enabled = true;
         if (storeInterface != null && canvasGroup != null && rectTransform != null)
