@@ -14,6 +14,11 @@
 | 0008 | [Екран перемоги в Escape](0008-escape-win-screen.uk.md) | `task/0008-escape-win-screen` | `EscapeSequence.cs`, новий `EscapeExitTrigger.cs`, новий `WinScreen.cs` |
 | 0009 | [Спільний UI для Pond](0009-shared-pond-ui.uk.md) | `task/0009-shared-pond-ui` | `Pond.cs`, новий `PondBaitRouter.cs` |
 | 0010 | [Teleport переносить і кулю](0010-teleport-with-ball.uk.md) | `task/0010-teleport-with-ball` | `PlayerStateManager.cs` (`UseTeleport()` + метод респавну) — **після злиття #14** |
+| 0011 | [Зростання цін Chisel Kit, без Booster](0011-chisel-kit-prices.uk.md) | `task/0011-chisel-kit-prices` | `Store.cs` |
+| 0012 | [Locked Pond + вікно розблокування](0012-pond-unlock.uk.md) | `task/0012-pond-unlock` | `Pond.cs`, новий `PondUnlockPopup.cs` |
+| 0013 | [Main Menu + стартовий стан](0013-main-menu.uk.md) | `task/0013-main-menu` | `PlayerStateManager.cs` (enum, `Start()`), новий `MainMenu.cs` |
+| 0014 | [Туторіал Guidelines + Skip](0014-guidelines-tutorial.uk.md) | `task/0014-guidelines-tutorial` | новий `Guidelines.cs`; хуки в `Store.cs`, `Pond.cs`, `EscapeSequence.cs` — **після злиття 0011–0013** |
+| 0015 | [Музичний плеєр](0015-music-player.uk.md) | `task/0015-music-player` | новий `MusicPlayer.cs` |
 
 Задачі змінюють різні файли й жодна не редагує `SampleScene.unity`, тож їх можна виконувати одночасно — окрім 0006, яка чекає на злиття PR #5 (0001) і 0005.
 

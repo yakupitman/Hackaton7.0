@@ -14,6 +14,11 @@ English plans are the source of truth; `*.uk.md` files are Ukrainian copies. Kee
 | 0008 | [Escape win screen](0008-escape-win-screen.md) | `task/0008-escape-win-screen` | `EscapeSequence.cs`, new `EscapeExitTrigger.cs`, new `WinScreen.cs` |
 | 0009 | [Shared Pond UI](0009-shared-pond-ui.md) | `task/0009-shared-pond-ui` | `Pond.cs`, new `PondBaitRouter.cs` |
 | 0010 | [Teleport moves the Ball too](0010-teleport-with-ball.md) | `task/0010-teleport-with-ball` | `PlayerStateManager.cs` (`UseTeleport()` + respawn helper) — **after #14 merges** |
+| 0011 | [Rising Chisel Kit prices, no Booster](0011-chisel-kit-prices.md) | `task/0011-chisel-kit-prices` | `Store.cs` |
+| 0012 | [Locked Ponds + unlock popup](0012-pond-unlock.md) | `task/0012-pond-unlock` | `Pond.cs`, new `PondUnlockPopup.cs` |
+| 0013 | [Main Menu + start state](0013-main-menu.md) | `task/0013-main-menu` | `PlayerStateManager.cs` (enum, `Start()`), new `MainMenu.cs` |
+| 0014 | [Guidelines tutorial + Skip](0014-guidelines-tutorial.md) | `task/0014-guidelines-tutorial` | new `Guidelines.cs`; hooks in `Store.cs`, `Pond.cs`, `EscapeSequence.cs` — **after 0011–0013 merge** |
+| 0015 | [Music player](0015-music-player.md) | `task/0015-music-player` | new `MusicPlayer.cs` |
 
 Tasks touch different files and none edit `SampleScene.unity`, so they can run at the same time — except 0006, which waits for PR #5 (0001) and 0005 to merge.
 

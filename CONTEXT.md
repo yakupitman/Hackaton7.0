@@ -23,11 +23,11 @@ The rope that ties the **Ball** to the **Player** and has a fixed length; drawn 
 _Avoid_: rope
 
 **Chisel Kit**:
-The one upgrade sold in the **Store**. Each purchase shrinks the **Ball**, raises the **Player**'s speed, and returns them to `Regular`. There are 5 in total.
+The main upgrade sold in the **Store**. Each purchase shrinks the **Ball**, raises the **Player**'s speed, and returns them to `Regular`. There are 5 in total, and each costs more than the one before (a fixed price list). Buying all 5 is the goal of the game.
 _Avoid_: upgrade, chiesel kit
 
 **Money**:
-The **Player**'s single currency. Starts at 500, earned by **Selling** **Prey**, spent on **Bait** and **Chisel Kits**.
+The **Player**'s single currency, earned by **Selling** **Prey** and spent on **Bait**, **Chisel Kits** and **Pond** unlocks. A new game starts with exactly enough for the **Guidelines** purchases (first Chisel Kit, 3 cheapest Bait, first Pond).
 _Avoid_: coins, balance
 
 **Death**:
@@ -54,6 +54,10 @@ _Avoid_: lake, room
 **Corridor Darkness**:
 Layered dark haze filling a **Pond**'s corridor. It hides everything except emissive materials, so a **Prey**'s glowing eyes appear first. The flashlight does not cut through it.
 _Avoid_: fog, shadow
+
+**Locked Pond**:
+A **Pond** the **Player** hasn't bought yet. Pressing E at it opens an unlock popup with its price. Ponds can be unlocked in any order, and each costs more than the previous one.
+_Avoid_: closed pond, disabled pond
 
 **Lift**:
 A **Building** with a lever and a **Lift Platform**. Pulling the lever raises the platform and anything on it to the **Sell Height**, then lowers it again.
@@ -112,10 +116,24 @@ _Avoid_: deliver, cash in
 **Sell Height**:
 The world height (y = 10) at which a **Prey** **Sells** itself automatically. The **Lift** reaches it.
 
+### Game flow
+
+**Main Menu**:
+The screen a session opens on: a view from a dedicated menu camera, with Start and Quit. Start fades to black and begins a new game with the **Guidelines**.
+_Avoid_: title screen, start screen
+
+**Guidelines**:
+The step-by-step tutorial panel shown at the start of every new game. It restricts the **Store** and advances as the **Player** completes each step. It can be skipped at any point, which gives the same state as finishing it.
+_Avoid_: tutorial, hints, onboarding
+
+**Free Play**:
+The game after the **Guidelines** end or are skipped: everything in the **Store** is available and the **Player** chooses their own route to the 5 **Chisel Kits** and the **Escape**.
+_Avoid_: sandbox, main game
+
 ### Escape
 
 **Escape**:
-The final run. Entering its trigger releases the **Ghost**, and reaching the **Exit** before it catches the **Player** wins the game: the game freezes and a win screen offers Restart.
+The final run. Entering its trigger releases the **Ghost**, and reaching the **Exit** before it catches the **Player** wins the game: the game freezes and a win screen offers Restart, which returns to the **Main Menu**. Only a **Player** with all 5 **Chisel Kits** is fast enough to outrun the **Ghost**.
 _Avoid_: escape sequence, chase, ending
 
 **Ghost**:
