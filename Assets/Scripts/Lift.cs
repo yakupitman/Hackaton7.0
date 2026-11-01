@@ -16,11 +16,13 @@ public class Lift : Building
     private Camera mainCamera;
     private bool isInteracting;
     private bool isLifting;
+    private float startY;
     private Sequence liftSequence;
 
     private void Start()
     {
         mainCamera = Camera.main;
+        startY = liftPlatform.position.y;
         raycastBlocker.SetActive(false);
     }
 
@@ -66,8 +68,8 @@ public class Lift : Building
         // The platform moves in physics steps so LiftPlatform can carry Prey with it
         liftSequence = DOTween.Sequence().SetUpdate(UpdateType.Fixed);
         liftSequence.AppendInterval(0.3f);
-        liftSequence.Append(liftPlatform.DOMoveY(liftPlatform.position.y + liftHeight, liftDuration).SetEase(Ease.InOutQuad));
-        liftSequence.Append(liftPlatform.DOMoveY(0.4125f, liftDuration).SetEase(Ease.InOutQuad));
+        liftSequence.Append(liftPlatform.DOMoveY(startY + liftHeight, liftDuration).SetEase(Ease.InOutQuad));
+        liftSequence.Append(liftPlatform.DOMoveY(startY, liftDuration).SetEase(Ease.InOutQuad));
         liftSequence.OnComplete(() =>
         {
             isLifting = false;
