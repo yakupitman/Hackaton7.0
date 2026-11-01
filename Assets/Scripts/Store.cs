@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
+using UnityEngine.UI;
+using TMPro;
 using Unity.Cinemachine;
 using DG.Tweening;
 
@@ -15,17 +16,26 @@ public class Store : Building
     [SerializeField] private int bait0Price = 10;
     [SerializeField] private int bait1Price = 20;
     [SerializeField] private int bait2Price = 30;
-    [SerializeField] private int chieselKitPrice = 50;
+    [SerializeField] private int[] chiselKitPrices = { 50, 120, 250, 450, 800 };
+    [SerializeField] private TextMeshProUGUI chiselKitPriceText;
+    [SerializeField] private Button chiselKitButton;
     [SerializeField] private int teleportPrice = 40;
-    [SerializeField] private int boosterPrice = 100;
 
     private CanvasGroup canvasGroup;
     private RectTransform rectTransform;
     private float originalY;
+    private int chiselKitsBought;
+
+    public int ChiselKitsBought => chiselKitsBought;
+
+    // Price of the next Chisel Kit, or -1 when all are bought
+    public int NextChiselKitPrice => chiselKitsBought < chiselKitPrices.Length ? chiselKitPrices[chiselKitsBought] : -1;
 
     private void Awake()
     {
         Instance = this;
+        // BallFollower and PlayerMovement both cap at 5 Kits
+        if (chiselKitPrices.Length != 5) Debug.LogWarning("Store: Chisel Kit Prices should have exactly 5 entries.");
         if (storeInterface != null)
         {
             rectTransform = storeInterface.GetComponent<RectTransform>();
@@ -33,6 +43,11 @@ public class Store : Building
             canvasGroup = storeInterface.GetComponent<CanvasGroup>();
             if (canvasGroup == null) canvasGroup = storeInterface.AddComponent<CanvasGroup>();
         }
+    }
+
+    private void Start()
+    {
+        RefreshChiselKitUI();
     }
 
     public override void BeginInteraction()
@@ -93,8 +108,13 @@ public class Store : Building
 
     public void BuyChiselKit()
     {
-        if (PlayerStateManager.Instance.SpendMoney(chieselKitPrice)) 
+        int price = NextChiselKitPrice;
+        // Sold out: do nothing
+        if (price < 0) return;
+        if (PlayerStateManager.Instance.SpendMoney(price))
         {
+            chiselKitsBought++;
+            RefreshChiselKitUI();
             OnChiselKitBought?.Invoke();
         }
         EndInteraction();
@@ -108,11 +128,10 @@ public class Store : Building
         }
     }
 
-    public void BuyBooster()
+    private void RefreshChiselKitUI()
     {
-        if (PlayerStateManager.Instance.SpendMoney(boosterPrice))
-        {
-            Debug.Log("Booster придбано. Ефект буде реалізовано згодом.");
-        }
+        int price = NextChiselKitPrice;
+        if (chiselKitPriceText != null) chiselKitPriceText.text = price < 0 ? "Sold out" : price.ToString();
+        if (chiselKitButton != null) chiselKitButton.interactable = price >= 0;
     }
 }
