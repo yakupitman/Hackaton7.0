@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rigidBody;
     private Vector3 lastMoveDirection = Vector3.forward;
     private Building currentBuilding;
+    private Building highlightedBuilding;
     private int speedUpgradeIndex = 0;
 
     private void Awake()
@@ -36,6 +37,7 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         TrackMoveDirection();
+        UpdateUseIndicator();
         HandleInteractionInput();
     }
 
@@ -68,12 +70,27 @@ public class PlayerMovement : MonoBehaviour
         else if (state == PlayerState.Interacting) EndCurrentInteraction();
     }
 
-    private void TryBeginInteraction()
+    private Building FindTargetBuilding()
     {
         Ray ray = new Ray(transform.position, lastMoveDirection);
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange)) return;
-        if (!hit.collider.CompareTag("Building")) return;
-        Building building = hit.collider.GetComponent<Building>();
+        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange)) return null;
+        if (!hit.collider.CompareTag("Building")) return null;
+        return hit.collider.GetComponent<Building>();
+    }
+
+    private void UpdateUseIndicator()
+    {
+        // Only Regular state can start an interaction, so only then is a Building a target
+        Building target = PlayerStateManager.Instance.CurrentState == PlayerState.Regular ? FindTargetBuilding() : null;
+        if (target == highlightedBuilding) return;
+        if (highlightedBuilding != null) highlightedBuilding.SetIndicatorVisible(false);
+        highlightedBuilding = target;
+        if (highlightedBuilding != null) highlightedBuilding.SetIndicatorVisible(true);
+    }
+
+    private void TryBeginInteraction()
+    {
+        Building building = FindTargetBuilding();
         if (building == null) return;
         currentBuilding = building;
         currentBuilding.BeginInteraction();
