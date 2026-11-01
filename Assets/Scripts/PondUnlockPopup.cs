@@ -17,7 +17,7 @@ public class PondUnlockPopup : MonoBehaviour
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private Button buyButton;
     [SerializeField] private Button cancelButton;
-    [SerializeField] private string messageFormat = "Unlock this Pond for {0}?";
+    [SerializeField] private string messageFormat = "Unlock this Pond for {0}?\nYou have {1}.";
     [SerializeField] private float fadeDuration = 0.25f;
 
     private void Awake()
@@ -63,7 +63,7 @@ public class PondUnlockPopup : MonoBehaviour
     public void Show(Pond pond, int price)
     {
         CurrentPond = pond;
-        if (messageText != null) messageText.text = string.Format(messageFormat, price);
+        RefreshMessage();
         RefreshBuyButton();
         if (panel == null) return;
         panel.DOKill();
@@ -102,7 +102,9 @@ public class PondUnlockPopup : MonoBehaviour
 
     private void OnMoneyChanged(int money)
     {
-        if (IsOpen) RefreshBuyButton();
+        if (!IsOpen) return;
+        RefreshMessage();
+        RefreshBuyButton();
     }
 
     private void OnStateChanged(PlayerState state)
@@ -112,6 +114,14 @@ public class PondUnlockPopup : MonoBehaviour
         Pond pond = CurrentPond;
         Hide();
         pond.EndInteraction();
+    }
+
+    private void RefreshMessage()
+    {
+        if (messageText == null || CurrentPond == null) return;
+        int money = PlayerStateManager.Instance != null ? PlayerStateManager.Instance.Money : 0;
+        // The Money HUD is hidden while Interacting, so the popup shows the balance itself
+        messageText.text = string.Format(messageFormat, CurrentPond.UnlockPrice, money);
     }
 
     private void RefreshBuyButton()
