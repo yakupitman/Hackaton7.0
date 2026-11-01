@@ -55,7 +55,7 @@ public class Guidelines : MonoBehaviour
         if (mainMenu == null) mainMenu = FindFirstObjectByType<MainMenu>();
         if (escapeSequence == null) escapeSequence = FindFirstObjectByType<EscapeSequence>();
         stateManager = PlayerStateManager.Instance;
-        ponds = FindObjectsByType<Pond>(FindObjectsSortMode.None);
+        ponds = FindObjectsByType<Pond>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         SetPanelVisible(false, true);
         if (stateManager == null || store == null)
         {
@@ -73,7 +73,11 @@ public class Guidelines : MonoBehaviour
             pond.OnCatchStarted.AddListener(OnCatchStarted);
             pond.OnPreyCaught.AddListener(OnPreyCaught);
         }
-        if (escapeSequence != null) escapeSequence.OnPlayerCaught.AddListener(OnPlayerCaught);
+        if (escapeSequence != null)
+        {
+            escapeSequence.OnPlayerCaught.AddListener(OnPlayerCaught);
+            escapeSequence.OnEscaped.AddListener(EnterFreePlay);
+        }
         if (skipButton != null) skipButton.onClick.AddListener(Skip);
         // Locked from the first frame, so nothing is bought out of order before the panel shows
         store.SetTutorialLock(true, false, false);
@@ -83,7 +87,7 @@ public class Guidelines : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (hintTween.IsActive()) hintTween.Kill();
+        KillHintTween();
         if (stateManager != null)
         {
             stateManager.OnStateChanged.RemoveListener(OnStateChanged);
@@ -101,7 +105,11 @@ public class Guidelines : MonoBehaviour
                 pond.OnPreyCaught.RemoveListener(OnPreyCaught);
             }
         }
-        if (escapeSequence != null) escapeSequence.OnPlayerCaught.RemoveListener(OnPlayerCaught);
+        if (escapeSequence != null)
+        {
+            escapeSequence.OnPlayerCaught.RemoveListener(OnPlayerCaught);
+            escapeSequence.OnEscaped.RemoveListener(EnterFreePlay);
+        }
         if (skipButton != null) skipButton.onClick.RemoveListener(Skip);
         if (mainMenu != null) mainMenu.OnGameStarted.RemoveListener(BeginGuidelines);
     }
@@ -113,6 +121,8 @@ public class Guidelines : MonoBehaviour
         Step skippedAt = currentStep;
         // Free Play first: it clears the Store lock, and the purchases below must not move the steps through the handlers
         EnterFreePlay();
+        // An open unlock popup would keep asking to pay for a Pond that Skip may unlock below
+        if (PondUnlockPopup.Instance != null && PondUnlockPopup.Instance.IsOpen) PondUnlockPopup.Instance.Close();
         if (store.ChiselKitsBought == 0) store.BuyChiselKit();
         if (skippedAt <= Step.BuyBait)
         {
@@ -187,20 +197,26 @@ public class Guidelines : MonoBehaviour
     private void ShowHint()
     {
         GoToStep(Step.Hint);
-        if (hintTween.IsActive()) hintTween.Kill();
-        // Scaled time: the hint must not run out while the game is frozen, and Death and the Store fades are scaled too
-        hintTween = DOVirtual.DelayedCall(hintDuration, EnterFreePlay).SetLink(gameObject);
+        KillHintTween();
+        // Scaled time (DelayedCall ignores timeScale by default): the hint must not run out while the game is frozen
+        hintTween = DOVirtual.DelayedCall(hintDuration, EnterFreePlay, false).SetLink(gameObject);
     }
 
     private void EnterFreePlay()
     {
-        if (hintTween.IsActive()) hintTween.Kill();
-        hintTween = null;
+        if (currentStep == Step.FreePlay) return;
+        KillHintTween();
         isWaitingForRespawn = false;
         currentStep = Step.FreePlay;
         store.ClearTutorialLock();
         SetPanelVisible(false, false);
         RefreshSkipButton();
+    }
+
+    private void KillHintTween()
+    {
+        hintTween?.Kill();
+        hintTween = null;
     }
 
     private Pond FindCheapestLockedPond()
